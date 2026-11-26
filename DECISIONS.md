@@ -7,6 +7,7 @@
 | 2026-11-26 | Final `.wordpress-org` artwork is placeholder solid-colour wordmark images | Final design pending; Plugin Check and listing layout can proceed. |
 | 2026-11-26 | CI used `CORE_REPO_TOKEN` while core was private | Superseded 2026-11-26: core is public; token/COMPOSER_AUTH removed from CI. |
 | 2026-11-26 | Health Check 1.0.1 only adapts DiskSummary to core 1.0.1 result shape | No Health Check feature changes beyond consuming leaner scan results. |
+| 2026-11-26 | CI strips path repo via PHP then `composer update` | `composer config --unset repositories.0` left the path entry; lock is gitignored so update is required. |
 | 2026-11-26 | PHP EOL table hard-coded with yearly update comment | Avoid remote HTTP; Site Health style local table. |
 | 2026-11-26 | Autoload owner guess uses active/inactive plugin slug prefixes with "possibly" wording | Heuristic only; never claim certainty. |
 | 2026-11-26 | Leftover DB tables are Info only | Heuristic prefix matching is too uncertain for Recommended/Critical. |

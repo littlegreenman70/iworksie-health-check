@@ -25,9 +25,20 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Prefer VCS over the local path repo in CI (path does not exist on the runner).
-          composer config --unset repositories.0 || true
-          composer install --no-interaction --prefer-dist
+          # Drop the local path repo (missing on the runner) so Composer uses the public VCS repo.
+          # composer.lock is gitignored; resolve fresh from composer.json.
+          php -r '
+          $path = "composer.json";
+          $j = json_decode( file_get_contents( $path ), true );
+          $j["repositories"] = array_values( array_filter(
+            isset( $j["repositories"] ) ? $j["repositories"] : array(),
+            static function ( $r ) {
+              return ( isset( $r["type"] ) ? $r["type"] : "" ) !== "path";
+            }
+          ) );
+          file_put_contents( $path, json_encode( $j, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . "\n" );
+          '
+          composer update --no-interaction --prefer-dist
 
       - name: PHPCS
         run: composer lint
@@ -70,8 +81,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer config --unset repositories.0 || true
-          composer install --no-interaction --prefer-dist
+          php -r '
+          $path = "composer.json";
+          $j = json_decode( file_get_contents( $path ), true );
+          $j["repositories"] = array_values( array_filter(
+            isset( $j["repositories"] ) ? $j["repositories"] : array(),
+            static function ( $r ) {
+              return ( isset( $r["type"] ) ? $r["type"] : "" ) !== "path";
+            }
+          ) );
+          file_put_contents( $path, json_encode( $j, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . "\n" );
+          '
+          composer update --no-interaction --prefer-dist
 
       - name: Install WP test suite
         run: bash bin/install-wp-tests.sh iworks_tests_hc root '' 127.0.0.1 latest
@@ -97,8 +118,18 @@ jobs:
 
       - name: Build plugin
         run: |
-          composer config --unset repositories.0 || true
-          composer install --no-interaction --prefer-dist
+          php -r '
+          $path = "composer.json";
+          $j = json_decode( file_get_contents( $path ), true );
+          $j["repositories"] = array_values( array_filter(
+            isset( $j["repositories"] ) ? $j["repositories"] : array(),
+            static function ( $r ) {
+              return ( isset( $r["type"] ) ? $r["type"] : "" ) !== "path";
+            }
+          ) );
+          file_put_contents( $path, json_encode( $j, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . "\n" );
+          '
+          composer update --no-interaction --prefer-dist
           composer build
 
       - name: Plugin Check
