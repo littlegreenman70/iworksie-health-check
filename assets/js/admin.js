@@ -37,100 +37,9 @@
 			.replace(/'/g, '&#039;');
 	}
 
-	function badgeHtml(status, strings) {
-		var label = strings[status] || status;
-		return (
-			'<span class="iwt-badge iwt-badge--' +
-			status +
-			'"><span class="screen-reader-text">' +
-			label +
-			': </span>' +
-			label +
-			'</span>'
-		);
-	}
-
-	function cardHtml(result, strings) {
-		var html =
-			'<article class="iwt-result iwt-result--' +
-			(result.status || 'info') +
-			'" data-status="' +
-			(result.status || 'info') +
-			'" data-check-id="' +
-			escapeHtml(result.id || '') +
-			'">';
-		html += '<header class="iwt-result__header">';
-		html += '<h3 class="iwt-result__title">' + escapeHtml(result.label || '') + '</h3>';
-		html += badgeHtml(result.status || 'info', strings);
-		html += '</header><div class="iwt-result__body"><p>' + escapeHtml(result.description || '') + '</p>';
-		if (result.why) {
-			html +=
-				'<details class="iwt-result__details"><summary>' +
-				escapeHtml(strings.why || 'Why it matters') +
-				'</summary><p>' +
-				escapeHtml(result.why) +
-				'</p></details>';
-		}
-		if (result.fix) {
-			html +=
-				'<details class="iwt-result__details"><summary>' +
-				escapeHtml(strings.fix || 'How to fix') +
-				'</summary><p>' +
-				escapeHtml(result.fix) +
-				'</p></details>';
-		}
-		html += '</div></article>';
-		return html;
-	}
-
-	function updateSummary(container, strings) {
-		var cards = container.querySelectorAll('.iwt-result');
-		var good = 0;
-		var recommended = 0;
-		var critical = 0;
-		cards.forEach(function (card) {
-			var status = card.getAttribute('data-status');
-			if (status === 'good') {
-				good += 1;
-			} else if (status === 'recommended') {
-				recommended += 1;
-			} else if (status === 'critical') {
-				critical += 1;
-			}
-		});
-		var total = good + recommended + critical;
-		var score = total === 0 ? 100 : Math.round((good / total) * 100);
-		var scoreClass = 'iwt-summary__score--good';
-		if (critical > 0) {
-			scoreClass = 'iwt-summary__score--critical';
-		} else if (recommended > 0) {
-			scoreClass = 'iwt-summary__score--recommended';
-		}
-		var summary = document.querySelector('[data-iwt-summary]');
-		if (!summary) {
-			return;
-		}
-		summary.innerHTML =
-			'<div class="iwt-summary__score ' +
-			scoreClass +
-			'" aria-hidden="true"><span>' +
-			score +
-			'</span></div><ul class="iwt-summary__counts">' +
-			'<li><span class="iwt-summary__count">' +
-			good +
-			'</span> ' +
-			escapeHtml(strings.good || 'Good') +
-			'</li>' +
-			'<li><span class="iwt-summary__count">' +
-			recommended +
-			'</span> ' +
-			escapeHtml(strings.recommended || 'Recommended') +
-			'</li>' +
-			'<li><span class="iwt-summary__count">' +
-			critical +
-			'</span> ' +
-			escapeHtml(strings.critical || 'Critical') +
-			'</li></ul>';
+	function progressLabel(current, total, strings) {
+		var template = (strings && strings.checkingProgress) || 'Checking {current} of {total}…';
+		return template.replace('{current}', String(current)).replace('{total}', String(total));
 	}
 
 	function runAllChecks() {
@@ -141,17 +50,37 @@
 		var strings = cfg.strings || {};
 		var list = document.querySelector('[data-iwt-results]');
 		var button = document.querySelector('[data-iwiehc-run-checks]');
+		var empty = document.querySelector('[data-iwt-empty]');
+		var summaryWrap = document.querySelector('[data-iwt-summary-wrap]');
 		if (!list) {
 			return;
 		}
+		if (empty) {
+			empty.hidden = true;
+		}
+		if (summaryWrap) {
+			summaryWrap.hidden = false;
+		}
 		if (button) {
 			button.disabled = true;
-			button.textContent = strings.running || 'Running…';
+			button.innerHTML =
+				'<span class="spinner is-active" aria-hidden="true"></span> ' +
+				escapeHtml(strings.running || 'Running…');
 		}
 		list.innerHTML = '';
+		list.setAttribute('aria-busy', 'true');
+		var collected = [];
+		var total = cfg.checks.length;
 		var chain = Promise.resolve();
-		cfg.checks.forEach(function (check) {
+		var ui = window.iwtCoreUi || {};
+
+		cfg.checks.forEach(function (check, index) {
 			chain = chain.then(function () {
+				if (button) {
+					button.innerHTML =
+						'<span class="spinner is-active" aria-hidden="true"></span> ' +
+						escapeHtml(progressLabel(index + 1, total, strings));
+				}
 				return post(cfg.prefix + '_run_check', {
 					nonce: cfg.checksNonce,
 					check_id: check.id
@@ -165,17 +94,25 @@
 									description: 'Request failed'
 							  };
 					result.id = check.id;
-					list.insertAdjacentHTML('beforeend', cardHtml(result, strings));
-					updateSummary(list, strings);
+					collected.push(result);
+					if (ui.renderGrouped) {
+						list.innerHTML = ui.renderGrouped(collected);
+						if (ui.bindAccordions) {
+							ui.bindAccordions(list);
+						}
+						if (ui.updateSummary) {
+							ui.updateSummary(list);
+						}
+					}
 				});
 			});
 		});
 		chain.finally(function () {
+			list.removeAttribute('aria-busy');
 			if (button) {
 				button.disabled = false;
-				button.textContent = button.getAttribute('data-label') || 'Run all checks';
+				button.textContent = button.getAttribute('data-label') || 'Run checks';
 			}
-			// Server already stored each result; this only stamps "last checked".
 			post('iwiehc_cache_results', {
 				nonce: cfg.checksNonce
 			}).then(function (json) {
