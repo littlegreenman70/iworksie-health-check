@@ -58,9 +58,12 @@ function rmDirRecursive(dir) {
 function ensureFixture() {
 	fs.mkdirSync(path.join(FIXTURE, 'backup-old'), { recursive: true });
 	fs.writeFileSync(path.join(FIXTURE, 'backup-old', 'dump.sql'), '-- fixture\n');
-	// Enough files that max_per_step=1 cannot finish before Cancel is clicked.
-	for (let i = 0; i < 80; i += 1) {
-		fs.writeFileSync(path.join(FIXTURE, `file-${i}.txt`), `fixture-${i}\n`);
+	// One file per subdirectory: SizeScanner processes one directory per step when
+	// max_per_step=1, so files in a single folder finish in one AJAX hop.
+	for (let i = 0; i < 40; i += 1) {
+		const dir = path.join(FIXTURE, `dir-${i}`);
+		fs.mkdirSync(dir, { recursive: true });
+		fs.writeFileSync(path.join(dir, 'file.txt'), `fixture-${i}\n`);
 	}
 }
 
