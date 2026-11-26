@@ -14,7 +14,7 @@
 | 10 Review 1.0.2 | done | DiskSummary tests, server-side results, PHP 7.4 lint job |
 | 11 Release 1.0.3 | done | Contributor `littlegreenman`; tag v1.0.3 |
 | 12 Release 1.1.0 | done | Core 1.1.0 assets/design; Playwright e2e; real screenshots |
-| 13 Release 1.1.1 | in progress | Notices, disk UX, backup list, score colours, real screenshots |
+| 13 Release 1.1.1 | done | Notices, disk UX, backup list, score colours, real screenshots; e2e green |
 
 ## v1.1.1 notes (2026-11-26 Europe/Dublin)
 
