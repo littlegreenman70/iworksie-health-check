@@ -58,9 +58,10 @@ function rmDirRecursive(dir) {
 function ensureFixture() {
 	fs.mkdirSync(path.join(FIXTURE, 'backup-old'), { recursive: true });
 	fs.writeFileSync(path.join(FIXTURE, 'backup-old', 'dump.sql'), '-- fixture\n');
-	fs.writeFileSync(path.join(FIXTURE, 'a.txt'), 'a');
-	fs.writeFileSync(path.join(FIXTURE, 'b.txt'), 'b');
-	fs.writeFileSync(path.join(FIXTURE, 'c.txt'), 'c');
+	// Enough files that max_per_step=1 cannot finish before Cancel is clicked.
+	for (let i = 0; i < 80; i += 1) {
+		fs.writeFileSync(path.join(FIXTURE, `file-${i}.txt`), `fixture-${i}\n`);
+	}
 }
 
 function writeBudgetMu() {
@@ -69,6 +70,7 @@ function writeBudgetMu() {
 		BUDGET_MU,
 		`<?php
 add_filter( 'iworks_tools_size_scanner_max_per_step', static function () { return 1; } );
+add_filter( 'iworks_tools_job_time_budget', static function () { return 0.05; } );
 `
 	);
 }
