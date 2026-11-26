@@ -86,8 +86,19 @@ final class DiskSummaryTest extends TestCase {
 		$this->assertSame( 1288490188, $summary['dead_overflow_bytes'] );
 		$this->assertSame( $listed + 1288490188, $summary['dead_bytes'] );
 
-		$this->assertContains( '/var/www/site/backup.sql', $summary['web_root_risks'] );
-		$this->assertContains( '/var/www/site/wp-content/uploads/backup-old.zip', $summary['web_root_risks'] );
+		$risk_paths = array_map(
+			static function ( $row ) {
+				return is_array( $row ) ? $row['path'] : $row;
+			},
+			$summary['web_root_risks']
+		);
+		$this->assertContains( '/var/www/site/backup.sql', $risk_paths );
+		$this->assertContains( '/var/www/site/wp-content/uploads/backup-old.zip', $risk_paths );
+		$this->assertArrayHasKey( 'outside', $summary['breakdown'] );
+		$this->assertSame(
+			2383505463 - 1837750042,
+			$summary['breakdown']['outside']
+		);
 
 		$message = DiskSummary::freeable_message( $summary );
 		$this->assertStringContainsString( 'You could free about', $message );

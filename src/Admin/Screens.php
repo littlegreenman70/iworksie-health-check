@@ -160,19 +160,65 @@ final class Screens {
 	 * @return void
 	 */
 	private function render_disk() {
-		$disk = ResultsCache::load_disk();
+		$disk  = ResultsCache::load_disk();
+		$state = $this->core->jobs()->load_state( 'size_scanner' );
+		$mode  = self::disk_toolbar_mode( $state, is_array( $disk ) );
+
 		echo '<p>' . esc_html__( 'Scan disk usage and look for dead weight such as old backups, caches, and development folders. This plugin never deletes anything.', 'iworksie-health-check' ) . '</p>';
-		echo '<div class="iwt-toolbar">';
-		echo '<button type="button" class="button button-primary" data-iwt-job-start data-job="size_scanner" data-progress="iwiehc-disk" data-iwiehc-disk-finish="1">' . esc_html__( 'Scan disk', 'iworksie-health-check' ) . '</button>';
-		echo '<button type="button" class="button" data-iwt-job-resume data-job="size_scanner" data-progress="iwiehc-disk" data-iwiehc-disk-finish="1">' . esc_html( Strings::get( 'resume' ) ) . '</button>';
-		echo '<button type="button" class="button" data-iwt-job-cancel>' . esc_html( Strings::get( 'cancel' ) ) . '</button>';
+		echo '<div class="iwt-toolbar" data-iwiehc-disk-toolbar data-mode="' . esc_attr( $mode ) . '">';
+		$start_label = ( 'finished' === $mode ) ? Strings::get( 'scan_again' ) : __( 'Scan disk', 'iworksie-health-check' );
+		echo '<button type="button" class="button button-primary" data-iwt-job-start data-job="size_scanner" data-progress="iwiehc-disk" data-iwiehc-disk-finish="1"' . ( 'running' === $mode ? ' hidden' : '' ) . '>' . esc_html( $start_label ) . '</button>';
+		echo '<button type="button" class="button" data-iwt-job-resume data-job="size_scanner" data-progress="iwiehc-disk" data-iwiehc-disk-finish="1"' . ( 'resume' === $mode ? '' : ' hidden' ) . '>' . esc_html( Strings::get( 'resume' ) ) . '</button>';
+		echo '<button type="button" class="button" data-iwt-job-cancel' . ( 'running' === $mode ? '' : ' hidden' ) . '>' . esc_html( Strings::get( 'cancel' ) ) . '</button>';
 		echo '</div>';
-		echo UI::progress( 'iwiehc-disk' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+
+		$progress_html = UI::progress( 'iwiehc-disk' );
+		if ( 'finished' === $mode && is_array( $disk ) ) {
+			$ago = isset( $disk['time'] ) ? human_time_diff( (int) $disk['time'], time() ) : '';
+			$msg = '' !== $ago
+				? Strings::get( 'scan_complete_ago', array( 'ago' => $ago ) )
+				: Strings::get( 'scan_complete' );
+			// Show completed state at 100%, not a misleading 0% bar.
+			$progress_html = str_replace(
+				array( 'aria-valuenow="0"', 'width:0%', '>0%</span>', 'iwt-progress__message" aria-live="polite"></p>' ),
+				array( 'aria-valuenow="100"', 'width:100%', '>100%</span>', 'iwt-progress__message" aria-live="polite">' . esc_html( $msg ) . '</p>' ),
+				$progress_html
+			);
+		} elseif ( 'idle' === $mode || 'resume' === $mode ) {
+			$progress_html = str_replace( 'class="iwt-progress"', 'class="iwt-progress is-idle"', $progress_html );
+		}
+		echo $progress_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- UI::progress escapes; message escaped above.
 		echo '<div id="iwiehc-disk-results" class="iwiehc-disk-results" aria-live="polite">';
 		if ( is_array( $disk ) ) {
 			$this->echo_disk_results( $disk );
 		}
 		echo '</div>';
+	}
+
+	/**
+	 * Decide which disk toolbar buttons to show.
+	 *
+	 * @param array<string,mixed>|null $state Job state.
+	 * @param bool                     $has_disk Whether a finished summary exists.
+	 * @return string idle|running|resume|finished
+	 */
+	private static function disk_toolbar_mode( $state, $has_disk ) {
+		if ( ! is_array( $state ) ) {
+			return $has_disk ? 'finished' : 'idle';
+		}
+		// Stale unfinished jobs are treated as cancelled/interrupted for Resume.
+		$updated = isset( $state['updated_at'] ) ? (int) $state['updated_at'] : 0;
+		$stale   = $updated > 0 && ( time() - $updated ) > 3600;
+		if ( empty( $state['done'] ) && empty( $state['cancelled'] ) && ! $stale ) {
+			return 'running';
+		}
+		if ( ! empty( $state['cancelled'] ) || ( empty( $state['done'] ) && $stale ) ) {
+			return 'resume';
+		}
+		if ( ! empty( $state['done'] ) && empty( $state['cancelled'] ) ) {
+			return 'finished';
+		}
+		return $has_disk ? 'finished' : 'idle';
 	}
 
 	/**
@@ -182,10 +228,12 @@ final class Screens {
 	private function echo_disk_results( array $disk ) {
 		$total      = isset( $disk['total_bytes'] ) ? (int) $disk['total_bytes'] : 0;
 		$breakdown  = ( isset( $disk['breakdown'] ) && is_array( $disk['breakdown'] ) ) ? $disk['breakdown'] : array();
-		$wp_content = 0;
-		foreach ( array( 'uploads', 'plugins', 'themes', 'other' ) as $key ) {
-			if ( isset( $breakdown[ $key ] ) ) {
-				$wp_content += (int) $breakdown[ $key ];
+		$wp_content = isset( $breakdown['content'] ) ? (int) $breakdown['content'] : 0;
+		if ( $wp_content <= 0 ) {
+			foreach ( array( 'uploads', 'plugins', 'themes', 'other' ) as $key ) {
+				if ( isset( $breakdown[ $key ] ) ) {
+					$wp_content += (int) $breakdown[ $key ];
+				}
 			}
 		}
 		$could_free = isset( $disk['dead_bytes'] ) ? (int) $disk['dead_bytes'] : 0;
@@ -199,27 +247,39 @@ final class Screens {
 		echo '<p class="iwt-stat-tile__value">' . esc_html( Bytes::format( $could_free ) ) . '</p></div>';
 		echo '</div>';
 
+		$seg_keys   = array( 'uploads', 'plugins', 'themes', 'other', 'outside' );
+		$seg_labels = array(
+			'uploads' => __( 'Uploads', 'iworksie-health-check' ),
+			'plugins' => __( 'Plugins', 'iworksie-health-check' ),
+			'themes'  => __( 'Themes', 'iworksie-health-check' ),
+			'other'   => __( 'Other wp-content', 'iworksie-health-check' ),
+			'outside' => __( 'Outside wp-content', 'iworksie-health-check' ),
+		);
 		if ( ! empty( $breakdown ) ) {
-			$sum = 0;
-			foreach ( $breakdown as $bytes ) {
-				$sum += (int) $bytes;
+			$basis = $total > 0 ? $total : 0;
+			if ( $basis <= 0 ) {
+				foreach ( $seg_keys as $key ) {
+					$basis += isset( $breakdown[ $key ] ) ? (int) $breakdown[ $key ] : 0;
+				}
 			}
-			$sum = max( 1, $sum );
-			echo '<div class="iwt-bar-chart" aria-label="' . esc_attr__( 'wp-content breakdown', 'iworksie-health-check' ) . '">';
+			$basis = max( 1, $basis );
+			echo '<div class="iwt-bar-chart" aria-label="' . esc_attr__( 'Site size breakdown', 'iworksie-health-check' ) . '">';
 			echo '<div class="iwt-bar-chart__track">';
-			foreach ( array( 'uploads', 'plugins', 'themes', 'other' ) as $key ) {
+			foreach ( $seg_keys as $key ) {
 				$bytes = isset( $breakdown[ $key ] ) ? (int) $breakdown[ $key ] : 0;
 				if ( $bytes <= 0 ) {
 					continue;
 				}
-				$pct = max( 1, (int) round( ( $bytes / $sum ) * 100 ) );
-				echo '<span class="iwt-bar-chart__seg iwt-bar-chart__seg--' . esc_attr( $key ) . '" style="width:' . esc_attr( (string) $pct ) . '%" title="' . esc_attr( $key . ': ' . Bytes::format( $bytes ) ) . '"></span>';
+				$pct   = max( 1, (int) round( ( $bytes / $basis ) * 100 ) );
+				$label = isset( $seg_labels[ $key ] ) ? $seg_labels[ $key ] : $key;
+				echo '<span class="iwt-bar-chart__seg iwt-bar-chart__seg--' . esc_attr( $key ) . '" style="width:' . esc_attr( (string) $pct ) . '%" title="' . esc_attr( $label . ': ' . Bytes::format( $bytes ) ) . '"></span>';
 			}
 			echo '</div><ul class="iwt-bar-chart__legend">';
-			foreach ( array( 'uploads', 'plugins', 'themes', 'other' ) as $key ) {
+			foreach ( $seg_keys as $key ) {
 				$bytes = isset( $breakdown[ $key ] ) ? (int) $breakdown[ $key ] : 0;
+				$label = isset( $seg_labels[ $key ] ) ? $seg_labels[ $key ] : $key;
 				echo '<li><span class="iwt-bar-chart__swatch iwt-bar-chart__seg--' . esc_attr( $key ) . '" aria-hidden="true"></span>';
-				echo esc_html( ucfirst( $key ) ) . ': ' . esc_html( Bytes::format( $bytes ) ) . '</li>';
+				echo esc_html( $label ) . ': ' . esc_html( Bytes::format( $bytes ) ) . '</li>';
 			}
 			echo '</ul></div>';
 		}
@@ -227,8 +287,12 @@ final class Screens {
 		if ( ! empty( $disk['top_folders'] ) && is_array( $disk['top_folders'] ) ) {
 			$rows = array();
 			foreach ( array_slice( $disk['top_folders'], 0, 20 ) as $folder ) {
+				$full   = isset( $folder['path'] ) ? (string) $folder['path'] : '';
 				$rows[] = array(
-					'path' => isset( $folder['path'] ) ? (string) $folder['path'] : '',
+					'path' => array(
+						'text'  => DiskSummary::relative_path( $full ),
+						'title' => $full,
+					),
 					'size' => Bytes::format( isset( $folder['bytes'] ) ? (int) $folder['bytes'] : 0 ),
 				);
 			}
@@ -251,8 +315,12 @@ final class Screens {
 			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Warning: take a backup and check with your developer before deleting anything.', 'iworksie-health-check' ) . '</p></div>';
 			$rows = array();
 			foreach ( $disk['dead_items'] as $item ) {
+				$full   = isset( $item['path'] ) ? (string) $item['path'] : '';
 				$rows[] = array(
-					'path'   => isset( $item['path'] ) ? (string) $item['path'] : '',
+					'path'   => array(
+						'text'  => DiskSummary::relative_path( $full ),
+						'title' => $full,
+					),
 					'size'   => Bytes::format( isset( $item['bytes'] ) ? (int) $item['bytes'] : 0 ),
 					'reason' => isset( $item['reason'] ) ? (string) $item['reason'] : '',
 				);
@@ -268,7 +336,56 @@ final class Screens {
 			echo $dead_table; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- UI::table escapes.
 		}
 		if ( ! empty( $disk['web_root_risks'] ) && is_array( $disk['web_root_risks'] ) ) {
-			echo '<div class="notice notice-error inline"><p>' . esc_html__( 'Critical: backup or SQL files were found under the web root. Anyone who guesses the file name can download them.', 'iworksie-health-check' ) . '</p></div>';
+			echo '<div class="notice notice-error inline"><p>' . esc_html__( 'Critical: backup files or folders were found under the web root. Anyone who guesses the name can download them.', 'iworksie-health-check' ) . '</p>';
+			echo '<ul class="iwiehc-web-root-risks">';
+			$shown = 0;
+			foreach ( $disk['web_root_risks'] as $risk ) {
+				if ( $shown >= 10 ) {
+					break;
+				}
+				if ( is_string( $risk ) ) {
+					$full   = $risk;
+					$bytes  = 0;
+					$is_dir = is_dir( $full );
+				} elseif ( is_array( $risk ) ) {
+					$full   = isset( $risk['path'] ) ? (string) $risk['path'] : '';
+					$bytes  = isset( $risk['bytes'] ) ? (int) $risk['bytes'] : 0;
+					$is_dir = ! empty( $risk['is_dir'] );
+				} else {
+					continue;
+				}
+				if ( '' === $full ) {
+					continue;
+				}
+				$kind = $is_dir ? __( 'folder', 'iworksie-health-check' ) : __( 'file', 'iworksie-health-check' );
+				$rel  = DiskSummary::relative_path( $full );
+				echo '<li title="' . esc_attr( $full ) . '">' . esc_html( $kind . ': ' . $rel . ' (' . Bytes::format( $bytes ) . ')' ) . '</li>';
+				++$shown;
+			}
+			echo '</ul>';
+			$more = count( $disk['web_root_risks'] ) - $shown;
+			if ( $more > 0 ) {
+				echo '<p>' . esc_html(
+					sprintf(
+						/* translators: %d: additional count */
+						__( 'and %d more', 'iworksie-health-check' ),
+						$more
+					)
+				) . '</p>';
+			}
+			if ( isset( $disk['time'] ) ) {
+				$when = function_exists( 'wp_date' )
+					? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $disk['time'] )
+					: gmdate( 'Y-m-d H:i', (int) $disk['time'] );
+				echo '<p class="iwiehc-scan-source">' . esc_html(
+					sprintf(
+						/* translators: %s: date */
+						__( 'From the disk scan on %s', 'iworksie-health-check' ),
+						$when
+					)
+				) . '</p>';
+			}
+			echo '</div>';
 		}
 	}
 

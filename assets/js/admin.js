@@ -126,6 +126,31 @@
 		});
 	}
 
+	function setDiskToolbarMode(mode) {
+		var toolbar = document.querySelector('[data-iwiehc-disk-toolbar]');
+		if (!toolbar) {
+			return;
+		}
+		toolbar.setAttribute('data-mode', mode);
+		var start = toolbar.querySelector('[data-iwt-job-start]');
+		var resume = toolbar.querySelector('[data-iwt-job-resume]');
+		var cancel = toolbar.querySelector('[data-iwt-job-cancel]');
+		if (start) {
+			start.hidden = mode === 'running';
+			if (mode === 'finished') {
+				start.textContent =
+					(window.iwtCore && window.iwtCore.strings && window.iwtCore.strings.scanAgain) ||
+					'Scan again';
+			}
+		}
+		if (resume) {
+			resume.hidden = mode !== 'resume';
+		}
+		if (cancel) {
+			cancel.hidden = mode !== 'running';
+		}
+	}
+
 	function watchDiskJob(progressId) {
 		var cfg = window.iwtCore;
 		if (!cfg) {
@@ -135,6 +160,9 @@
 		if (!progress) {
 			return;
 		}
+		progress.classList.remove('is-idle');
+		progress.hidden = false;
+		setDiskToolbarMode('running');
 		var timer = window.setInterval(function () {
 			var track = progress.querySelector('[role="progressbar"]');
 			var now = track ? parseInt(track.getAttribute('aria-valuenow') || '0', 10) : 0;
@@ -142,6 +170,7 @@
 			var text = msg ? msg.textContent || '' : '';
 			if (/cancelled/i.test(text)) {
 				window.clearInterval(timer);
+				setDiskToolbarMode('resume');
 				return;
 			}
 			if (now >= 100 || /complete|done/i.test(text)) {

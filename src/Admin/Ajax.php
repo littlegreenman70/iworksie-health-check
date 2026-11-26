@@ -163,12 +163,24 @@ final class Ajax {
 		$detail = '' !== $error_message ? $error_message : __( 'wp_mail() returned false without a detailed error.', 'iworksie-health-check' );
 		wp_send_json_error(
 			array(
-				'message' => sprintf(
-					/* translators: %s: error detail */
-					__( 'The test email failed or was blocked: %s. On local development sites a safety plugin often blocks mail on purpose. On live sites, SMTP is the usual fix.', 'iworksie-health-check' ),
-					$detail
-				),
+				'message' => self::format_test_email_failure( $detail ),
 			)
+		);
+	}
+
+	/**
+	 * Join the failure template with a detail that may already end in a full stop.
+	 *
+	 * @param string $detail Error detail.
+	 * @return string
+	 */
+	public static function format_test_email_failure( $detail ) {
+		$detail = rtrim( (string) $detail );
+		$detail = rtrim( $detail, '.' );
+		return sprintf(
+			/* translators: %s: error detail */
+			__( 'The test email failed or was blocked: %s. On local development sites a safety plugin often blocks mail on purpose. On live sites, SMTP is the usual fix.', 'iworksie-health-check' ),
+			$detail
 		);
 	}
 }
