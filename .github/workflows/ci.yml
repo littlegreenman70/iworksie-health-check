@@ -27,6 +27,7 @@ jobs:
         run: |
           # Drop the local path repo (missing on the runner) so Composer uses the public VCS repo.
           # composer.lock is gitignored; resolve fresh from composer.json.
+          # Strauss 0.32 pulls flysystem 3 which needs PHP 8+; ignore platform on 7.4 so we can still unit-test the plugin.
           php -r '
           $path = "composer.json";
           $j = json_decode( file_get_contents( $path ), true );
@@ -38,7 +39,11 @@ jobs:
           ) );
           file_put_contents( $path, json_encode( $j, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . "\n" );
           '
-          composer update --no-interaction --prefer-dist
+          if [ "${{ matrix.php }}" = "7.4" ]; then
+            composer update --no-interaction --prefer-dist --ignore-platform-reqs
+          else
+            composer update --no-interaction --prefer-dist
+          fi
 
       - name: PHPCS
         run: composer lint
