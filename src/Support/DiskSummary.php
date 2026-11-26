@@ -38,9 +38,10 @@ final class DiskSummary {
 		$overflow       = isset( $result['dead_files_overflow'] ) ? (int) $result['dead_files_overflow'] : 0;
 		$overflow_bytes = isset( $result['dead_files_overflow_bytes'] ) ? (int) $result['dead_files_overflow_bytes'] : 0;
 
-		$breakdown = self::wp_content_breakdown_from_tree( $tree );
-		$top       = self::top_folders_from_tree( $tree, 20 );
-		$risks     = self::web_root_risks_from_lists( $dead, $top_files );
+		$breakdown            = self::wp_content_breakdown_from_tree( $tree );
+		$breakdown['outside'] = max( 0, $total_bytes - ( isset( $breakdown['content'] ) ? (int) $breakdown['content'] : 0 ) );
+		$top                  = self::top_folders_from_tree( $tree, 20 );
+		$risks                = self::web_root_risks_from_lists( $dead, $top_files );
 
 		$dead_bytes = 0;
 		$dead_items = array();
@@ -80,6 +81,28 @@ final class DiskSummary {
 			'unreadable'          => isset( $result['unreadable'] ) ? $result['unreadable'] : array(),
 			'unreadable_count'    => isset( $result['unreadable_count'] ) ? (int) $result['unreadable_count'] : 0,
 		);
+	}
+
+	/**
+	 * Path relative to the site root (ABSPATH), for display.
+	 *
+	 * @param string $path Absolute or relative path.
+	 * @return string
+	 */
+	public static function relative_path( $path ) {
+		$abs  = defined( 'ABSPATH' ) ? rtrim( wp_normalize_path( ABSPATH ), '/' ) : '';
+		$path = rtrim( wp_normalize_path( (string) $path ), '/' );
+		if ( '' === $abs ) {
+			return $path;
+		}
+		if ( $path === $abs ) {
+			return '.';
+		}
+		$prefix = $abs . '/';
+		if ( 0 === strpos( $path, $prefix ) ) {
+			return substr( $path, strlen( $prefix ) );
+		}
+		return $path;
 	}
 
 	/**
@@ -130,6 +153,7 @@ final class DiskSummary {
 			'themes'  => 0,
 			'other'   => 0,
 			'content' => 0,
+			'outside' => 0,
 		);
 		foreach ( $keys as $key => $path ) {
 			$node = self::find_tree_node( $tree, $path );
@@ -209,11 +233,12 @@ final class DiskSummary {
 	/**
 	 * @param array<int,array<string,mixed>> $dead Dead weight.
 	 * @param array<int,array<string,mixed>> $top  Top files.
-	 * @return array<int,string>
+	 * @return array<int,array{path:string,bytes:int,is_dir:bool}>
 	 */
 	private static function web_root_risks_from_lists( array $dead, array $top ) {
 		$abs  = defined( 'ABSPATH' ) ? wp_normalize_path( ABSPATH ) : '';
 		$out  = array();
+		$seen = array();
 		$exts = array( 'sql', 'zip', 'tar', 'gz', 'tgz', 'rar', '7z' );
 		$pool = array_merge( $dead, $top );
 		foreach ( $pool as $item ) {
@@ -224,22 +249,29 @@ final class DiskSummary {
 			if ( '' === $path || '' === $abs || 0 !== strpos( $path, $abs ) ) {
 				continue;
 			}
-			if ( ! empty( $item['is_dir'] ) ) {
-				continue;
-			}
 			$base    = basename( $path );
 			$ext     = strtolower( pathinfo( $base, PATHINFO_EXTENSION ) );
+			$is_dir  = ! empty( $item['is_dir'] );
 			$dead_id = '';
 			if ( isset( $item['dead']['id'] ) ) {
 				$dead_id = (string) $item['dead']['id'];
 			} elseif ( isset( $item['id'] ) ) {
 				$dead_id = (string) $item['id'];
 			}
-			$risky = in_array( $ext, $exts, true ) || false !== stripos( $base, 'backup' ) || in_array( $dead_id, array( 'archive', 'sql_large' ), true );
-			if ( $risky ) {
-				$out[] = $path;
+			$backup_dead = ( 0 === strpos( $dead_id, 'backup' ) );
+			$risky       = $backup_dead
+				|| false !== stripos( $base, 'backup' )
+				|| ( ! $is_dir && ( in_array( $ext, $exts, true ) || in_array( $dead_id, array( 'archive', 'sql_large' ), true ) ) );
+			if ( ! $risky || isset( $seen[ $path ] ) ) {
+				continue;
 			}
+			$seen[ $path ] = true;
+			$out[]         = array(
+				'path'   => $path,
+				'bytes'  => isset( $item['bytes'] ) ? (int) $item['bytes'] : 0,
+				'is_dir' => $is_dir,
+			);
 		}
-		return array_values( array_unique( $out ) );
+		return $out;
 	}
 }

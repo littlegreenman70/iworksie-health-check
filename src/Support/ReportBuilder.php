@@ -89,7 +89,37 @@ final class ReportBuilder {
 				foreach ( array_slice( $disk['dead_items'], 0, 20 ) as $item ) {
 					$path      = isset( $item['path'] ) ? (string) $item['path'] : '';
 					$size      = isset( $item['bytes'] ) ? Bytes::format( (int) $item['bytes'] ) : '';
-					$markdown .= '  - ' . self::relative_path( $path ) . ' (' . $size . ")\n";
+					$markdown .= '  - ' . DiskSummary::relative_path( $path ) . ' (' . $size . ")\n";
+				}
+			}
+			if ( ! empty( $disk['web_root_risks'] ) && is_array( $disk['web_root_risks'] ) ) {
+				$markdown .= "- Backup files or folders under the web root:\n";
+				$shown     = 0;
+				foreach ( $disk['web_root_risks'] as $risk ) {
+					if ( $shown >= 10 ) {
+						break;
+					}
+					if ( is_string( $risk ) ) {
+						$path   = $risk;
+						$bytes  = 0;
+						$is_dir = false;
+					} elseif ( is_array( $risk ) ) {
+						$path   = isset( $risk['path'] ) ? (string) $risk['path'] : '';
+						$bytes  = isset( $risk['bytes'] ) ? (int) $risk['bytes'] : 0;
+						$is_dir = ! empty( $risk['is_dir'] );
+					} else {
+						continue;
+					}
+					if ( '' === $path ) {
+						continue;
+					}
+					$kind      = $is_dir ? 'folder' : 'file';
+					$markdown .= '  - ' . $kind . ': ' . DiskSummary::relative_path( $path ) . ' (' . Bytes::format( $bytes ) . ")\n";
+					++$shown;
+				}
+				$more = count( $disk['web_root_risks'] ) - $shown;
+				if ( $more > 0 ) {
+					$markdown .= '  - and ' . $more . " more\n";
 				}
 			}
 		}
@@ -168,18 +198,5 @@ final class ReportBuilder {
 			return '(unknown)';
 		}
 		return '@' . substr( $email, $pos + 1 );
-	}
-
-	/**
-	 * @param string $path Absolute path.
-	 * @return string
-	 */
-	private static function relative_path( $path ) {
-		$abs  = defined( 'ABSPATH' ) ? wp_normalize_path( ABSPATH ) : '';
-		$path = wp_normalize_path( $path );
-		if ( '' !== $abs && 0 === strpos( $path, $abs ) ) {
-			return ltrim( substr( $path, strlen( $abs ) ), '/' );
-		}
-		return $path;
 	}
 }

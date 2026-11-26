@@ -14,6 +14,15 @@
 | 10 Review 1.0.2 | done | DiskSummary tests, server-side results, PHP 7.4 lint job |
 | 11 Release 1.0.3 | done | Contributor `littlegreenman`; tag v1.0.3 |
 | 12 Release 1.1.0 | done | Core 1.1.0 assets/design; Playwright e2e; real screenshots |
+| 13 Release 1.1.1 | done | Notices, disk UX, backup list, score colours, real screenshots; e2e green |
+
+## v1.1.1 notes (2026-11-26 Europe/Dublin)
+
+- Requires tools-core 1.1.1 (`wp-header-end`, Site Health badge, score bands, match lists).
+- Disk toolbar: Scan again / Resume / Cancel by job mode; relative paths; Outside wp-content bar segment.
+- Backup web-root check lists matches; 7-day stale disk scan falls back to shallow scan.
+- Test-email failure copy no longer doubles the full stop.
+- E2E cleans fixture data; screenshot pass runs a real full scan with examples deactivated.
 
 ## v1.1.0 notes (2026-11-26 Europe/Dublin)
 

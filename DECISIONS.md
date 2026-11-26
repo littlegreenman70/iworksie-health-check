@@ -8,6 +8,12 @@
 | 2026-11-26 | Screenshots 1–5 are real Playwright captures of www.iworks.new admin (1280×800) | Walkthrough showed placeholders; 1.1.0 requires browser proof. |
 | 2026-11-26 | Playwright auth uses WP-CLI `wp_generate_auth_cookie` (secure_auth + logged_in), no password typing | Local HTTPS; ignoreHTTPSErrors; short-lived cookies. |
 | 2026-11-26 | E2E disk cancel/resume uses fixture under uploads + `iworks_tools_size_scanner_max_per_step=1` mu-plugin | Full ABSPATH finishes in one AJAX hop on this machine; multi-step required to exercise cancel. |
+| 2026-11-26 | Disk toolbar modes: idle / running / resume / finished; only show Cancel while running and Resume after cancel/interrupt | Finished scans were showing Scan + Resume + Cancel with a 0% bar. |
+| 2026-11-26 | Display paths relative to ABSPATH; keep absolute in `title` | Full server paths leaked into Top folders / Dead weight / Report. |
+| 2026-11-26 | Breakdown bar is site-total based with an Outside wp-content segment; Uploads green / Plugins blue / Themes purple / Other grey / Outside amber | Uploads and Plugins were nearly the same blue. |
+| 2026-11-26 | `web_root_risks` store `{path,bytes,is_dir}`; backup folders included; check lists up to 10 matches and falls back to shallow scan when disk scan is older than 7 days | Critical card said “1 backup…” with no names, and could reuse stale fixture data. |
+| 2026-11-26 | E2E cleans fixture + job/disk options in `finally`; screenshots run a real uncapped site scan with example plugins deactivated | Screenshots previously showed 40 B fixture Criticals. |
+| 2026-11-26 | Strip trailing `.` from test-email error detail before joining the failure sentence | Produced a double full stop (“error.. On local…”). |
 | 2026-11-26 | Health Check 1.0.1 only adapts DiskSummary to core 1.0.1 result shape | No Health Check feature changes beyond consuming leaner scan results. |
 | 2026-11-26 | CI strips path repo via PHP then `composer update` | `composer config --unset repositories.0` left the path entry; lock is gitignored so update is required. |
 | 2026-11-26 | Quality CI matrix is PHP 8.3 only; add PHP 7.4 `php -l` on the built zip | Strauss 0.32 cannot run on 7.4. Runtime still declares PHP 7.4+; syntax lint keeps that promise honest. |
