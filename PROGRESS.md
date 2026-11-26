@@ -8,5 +8,6 @@
 | 4 Screens | done | Overview, Disk, Report, Tools + Site Health + WP-CLI |
 | 5 readme.txt | done | wordpress.org format |
 | 6 Tests | done | Unit 8 OK; Integration 5 OK; Plugin Check clean |
-| 7 Build and CI | done | build zip + ci.yml (needs CORE_REPO_TOKEN) |
+| 7 Build and CI | done | build zip + ci.yml (public core, no token) |
 | 8 GitHub | done | https://github.com/littlegreenman70/iworksie-health-check tag v1.0.0 |
+| 9 Core 1.0.1 | done | composer update, DiskSummary for lean scan, CI token removed, bump 1.0.1 |

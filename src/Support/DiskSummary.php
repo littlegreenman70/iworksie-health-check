@@ -9,33 +9,56 @@ namespace IWorksIE\HealthCheck\Support;
 
 /**
  * Disk scan post-processing. Never deletes.
+ *
+ * Compatible with tools-core 1.0.1+ results (tree, top_files, dead_weight)
+ * without relying on per-file nodes.
  */
 final class DiskSummary {
 
 	/**
 	 * Build a summary from job result / state.
 	 *
-	 * @param array<string,mixed> $payload Job finish or state with nodes/result.
+	 * @param array<string,mixed> $payload Job finish or state with result.
 	 * @return array<string,mixed>
 	 */
 	public static function from_job( array $payload ) {
 		$result = isset( $payload['result'] ) && is_array( $payload['result'] ) ? $payload['result'] : $payload;
-		$nodes  = array();
-		if ( isset( $payload['nodes'] ) && is_array( $payload['nodes'] ) ) {
-			$nodes = $payload['nodes'];
-		}
 
 		$total_bytes = isset( $result['total_bytes'] ) ? (int) $result['total_bytes'] : ( isset( $payload['total_bytes'] ) ? (int) $payload['total_bytes'] : 0 );
 		$tree        = isset( $result['tree'] ) && is_array( $result['tree'] ) ? $result['tree'] : ( isset( $payload['tree'] ) && is_array( $payload['tree'] ) ? $payload['tree'] : array() );
+		$top_files   = isset( $result['top_files'] ) && is_array( $result['top_files'] ) ? $result['top_files'] : array();
+		$dead        = isset( $result['dead_weight'] ) && is_array( $result['dead_weight'] ) ? $result['dead_weight'] : array();
+		if ( empty( $dead ) && isset( $result['dead_files'] ) && is_array( $result['dead_files'] ) ) {
+			$dead = $result['dead_files'];
+		}
 
-		$breakdown = self::wp_content_breakdown( $nodes, $tree );
-		$top       = self::top_folders( $nodes, 20 );
-		$dead      = self::dead_weight_list( $nodes );
-		$risks     = self::web_root_risks( $nodes );
+		$breakdown = self::wp_content_breakdown_from_tree( $tree );
+		$top       = self::top_folders_from_tree( $tree, 20 );
+		$risks     = self::web_root_risks_from_lists( $dead, $top_files );
 
 		$dead_bytes = 0;
+		$dead_items = array();
 		foreach ( $dead as $item ) {
-			$dead_bytes += isset( $item['bytes'] ) ? (int) $item['bytes'] : 0;
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$bytes       = isset( $item['bytes'] ) ? (int) $item['bytes'] : 0;
+			$dead_bytes += $bytes;
+			$reason      = '';
+			if ( isset( $item['dead'] ) && is_array( $item['dead'] ) && isset( $item['dead']['reason'] ) ) {
+				$reason = (string) $item['dead']['reason'];
+			} elseif ( isset( $item['reason'] ) ) {
+				$reason = (string) $item['reason'];
+			}
+			$dead_items[] = array(
+				'path'   => isset( $item['path'] ) ? (string) $item['path'] : '',
+				'bytes'  => $bytes,
+				'reason' => $reason,
+				'id'     => ( isset( $item['dead']['id'] ) ? (string) $item['dead']['id'] : ( isset( $item['id'] ) ? (string) $item['id'] : '' ) ),
+			);
+		}
+		if ( isset( $result['dead_files_overflow_bytes'] ) ) {
+			$dead_bytes += (int) $result['dead_files_overflow_bytes'];
 		}
 
 		return array(
@@ -44,7 +67,8 @@ final class DiskSummary {
 			'total_files'    => isset( $result['total_files'] ) ? (int) $result['total_files'] : 0,
 			'breakdown'      => $breakdown,
 			'top_folders'    => $top,
-			'dead_items'     => $dead,
+			'top_files'      => $top_files,
+			'dead_items'     => $dead_items,
 			'dead_bytes'     => $dead_bytes,
 			'web_root_risks' => $risks,
 			'unreadable'     => isset( $result['unreadable'] ) ? $result['unreadable'] : array(),
@@ -52,18 +76,17 @@ final class DiskSummary {
 	}
 
 	/**
-	 * @param array<string,array<string,mixed>> $nodes Nodes.
-	 * @param array<string,mixed>               $tree  Tree.
+	 * @param array<string,mixed> $tree Tree.
 	 * @return array<string,int>
 	 */
-	private static function wp_content_breakdown( array $nodes, array $tree ) {
+	private static function wp_content_breakdown_from_tree( array $tree ) {
 		$abs     = defined( 'ABSPATH' ) ? wp_normalize_path( ABSPATH ) : '';
 		$content = defined( 'WP_CONTENT_DIR' ) ? wp_normalize_path( WP_CONTENT_DIR ) : ( $abs . 'wp-content' );
 		$keys    = array(
-			'uploads' => $content . '/uploads',
-			'plugins' => $content . '/plugins',
-			'themes'  => $content . '/themes',
-			'other'   => $content,
+			'uploads' => wp_normalize_path( $content . '/uploads' ),
+			'plugins' => wp_normalize_path( $content . '/plugins' ),
+			'themes'  => wp_normalize_path( $content . '/themes' ),
+			'other'   => wp_normalize_path( $content ),
 		);
 		$out     = array(
 			'uploads' => 0,
@@ -73,52 +96,50 @@ final class DiskSummary {
 			'content' => 0,
 		);
 		foreach ( $keys as $key => $path ) {
-			$path = wp_normalize_path( $path );
-			if ( isset( $nodes[ $path ] ) ) {
-				$out[ $key ] = self::node_total_bytes( $path, $nodes );
+			$node = self::find_tree_node( $tree, $path );
+			if ( null !== $node ) {
+				$out[ $key ] = isset( $node['bytes'] ) ? (int) $node['bytes'] : 0;
 			}
 		}
 		$out['content'] = $out['other'];
 		$out['other']   = max( 0, $out['content'] - $out['uploads'] - $out['plugins'] - $out['themes'] );
-		unset( $tree );
 		return $out;
 	}
 
 	/**
-	 * @param string                            $path  Path.
-	 * @param array<string,array<string,mixed>> $nodes Nodes.
-	 * @return int
+	 * @param array<string,mixed> $tree  Tree.
+	 * @param string              $path  Absolute path.
+	 * @return array<string,mixed>|null
 	 */
-	private static function node_total_bytes( $path, array $nodes ) {
-		if ( ! isset( $nodes[ $path ] ) ) {
-			return 0;
+	private static function find_tree_node( array $tree, $path ) {
+		$path      = wp_normalize_path( $path );
+		$node_path = isset( $tree['path'] ) ? wp_normalize_path( (string) $tree['path'] ) : '';
+		if ( $node_path === $path ) {
+			return $tree;
 		}
-		$node  = $nodes[ $path ];
-		$total = isset( $node['bytes'] ) ? (int) $node['bytes'] : 0;
-		if ( ! empty( $node['children'] ) && is_array( $node['children'] ) ) {
-			foreach ( $node['children'] as $child ) {
-				$total += self::node_total_bytes( (string) $child, $nodes );
+		if ( empty( $tree['children'] ) || ! is_array( $tree['children'] ) ) {
+			return null;
+		}
+		foreach ( $tree['children'] as $child ) {
+			if ( ! is_array( $child ) ) {
+				continue;
+			}
+			$found = self::find_tree_node( $child, $path );
+			if ( null !== $found ) {
+				return $found;
 			}
 		}
-		return $total;
+		return null;
 	}
 
 	/**
-	 * @param array<string,array<string,mixed>> $nodes Nodes.
-	 * @param int                               $limit Limit.
+	 * @param array<string,mixed> $tree  Tree.
+	 * @param int                 $limit Limit.
 	 * @return array<int,array<string,mixed>>
 	 */
-	private static function top_folders( array $nodes, $limit ) {
+	private static function top_folders_from_tree( array $tree, $limit ) {
 		$dirs = array();
-		foreach ( $nodes as $path => $node ) {
-			if ( empty( $node['is_dir'] ) ) {
-				continue;
-			}
-			$dirs[] = array(
-				'path'  => (string) $path,
-				'bytes' => self::node_total_bytes( (string) $path, $nodes ),
-			);
-		}
+		self::collect_dirs( $tree, $dirs );
 		usort(
 			$dirs,
 			static function ( $a, $b ) {
@@ -129,56 +150,58 @@ final class DiskSummary {
 	}
 
 	/**
-	 * @param array<string,array<string,mixed>> $nodes Nodes.
-	 * @return array<int,array<string,mixed>>
+	 * @param array<string,mixed>            $node Node.
+	 * @param array<int,array<string,mixed>> $dirs Accumulator.
+	 * @return void
 	 */
-	private static function dead_weight_list( array $nodes ) {
-		$items = array();
-		foreach ( $nodes as $path => $node ) {
-			if ( empty( $node['dead'] ) || ! is_array( $node['dead'] ) ) {
-				continue;
-			}
-			$bytes   = ! empty( $node['is_dir'] ) ? self::node_total_bytes( (string) $path, $nodes ) : ( isset( $node['bytes'] ) ? (int) $node['bytes'] : 0 );
-			$items[] = array(
-				'path'   => (string) $path,
-				'bytes'  => $bytes,
-				'reason' => isset( $node['dead']['reason'] ) ? (string) $node['dead']['reason'] : '',
-				'id'     => isset( $node['dead']['id'] ) ? (string) $node['dead']['id'] : '',
+	private static function collect_dirs( array $node, array &$dirs ) {
+		if ( ! empty( $node['is_dir'] ) || ( isset( $node['children'] ) && is_array( $node['children'] ) ) ) {
+			$dirs[] = array(
+				'path'  => isset( $node['path'] ) ? (string) $node['path'] : '',
+				'bytes' => isset( $node['bytes'] ) ? (int) $node['bytes'] : 0,
 			);
 		}
-		usort(
-			$items,
-			static function ( $a, $b ) {
-				return $b['bytes'] <=> $a['bytes'];
+		if ( ! empty( $node['children'] ) && is_array( $node['children'] ) ) {
+			foreach ( $node['children'] as $child ) {
+				if ( is_array( $child ) ) {
+					self::collect_dirs( $child, $dirs );
+				}
 			}
-		);
-		return $items;
+		}
 	}
 
 	/**
-	 * Backup/SQL archives under ABSPATH.
-	 *
-	 * @param array<string,array<string,mixed>> $nodes Nodes.
+	 * @param array<int,array<string,mixed>> $dead Dead weight.
+	 * @param array<int,array<string,mixed>> $top  Top files.
 	 * @return array<int,string>
 	 */
-	private static function web_root_risks( array $nodes ) {
+	private static function web_root_risks_from_lists( array $dead, array $top ) {
 		$abs  = defined( 'ABSPATH' ) ? wp_normalize_path( ABSPATH ) : '';
 		$out  = array();
 		$exts = array( 'sql', 'zip', 'tar', 'gz', 'tgz', 'rar', '7z' );
-		foreach ( $nodes as $path => $node ) {
-			if ( ! empty( $node['is_dir'] ) ) {
+		$pool = array_merge( $dead, $top );
+		foreach ( $pool as $item ) {
+			if ( ! is_array( $item ) ) {
 				continue;
 			}
-			$path_n = wp_normalize_path( (string) $path );
-			if ( '' === $abs || 0 !== strpos( $path_n, $abs ) ) {
+			$path = isset( $item['path'] ) ? wp_normalize_path( (string) $item['path'] ) : '';
+			if ( '' === $path || '' === $abs || 0 !== strpos( $path, $abs ) ) {
 				continue;
 			}
-			$base    = basename( $path_n );
+			if ( ! empty( $item['is_dir'] ) ) {
+				continue;
+			}
+			$base    = basename( $path );
 			$ext     = strtolower( pathinfo( $base, PATHINFO_EXTENSION ) );
-			$dead_id = isset( $node['dead']['id'] ) ? (string) $node['dead']['id'] : '';
-			$risky   = in_array( $ext, $exts, true ) || false !== stripos( $base, 'backup' ) || in_array( $dead_id, array( 'archive', 'sql_large' ), true );
+			$dead_id = '';
+			if ( isset( $item['dead']['id'] ) ) {
+				$dead_id = (string) $item['dead']['id'];
+			} elseif ( isset( $item['id'] ) ) {
+				$dead_id = (string) $item['id'];
+			}
+			$risky = in_array( $ext, $exts, true ) || false !== stripos( $base, 'backup' ) || in_array( $dead_id, array( 'archive', 'sql_large' ), true );
 			if ( $risky ) {
-				$out[] = $path_n;
+				$out[] = $path;
 			}
 		}
 		return array_values( array_unique( $out ) );

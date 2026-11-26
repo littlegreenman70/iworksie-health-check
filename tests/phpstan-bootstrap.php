@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', '/tmp/wordpress/' );
 }
 if ( ! defined( 'IWIEHC_VERSION' ) ) {
-	define( 'IWIEHC_VERSION', '1.0.0' );
+	define( 'IWIEHC_VERSION', '1.0.1' );
 }
 if ( ! defined( 'IWIEHC_FILE' ) ) {
 	define( 'IWIEHC_FILE', '/tmp/iworksie-health-check/iworksie-health-check.php' );

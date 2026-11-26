@@ -16,7 +16,7 @@ ln -sfn "$(pwd)" /opt/homebrew/var/www/www.iworks.new/wp-content/plugins/iworksi
 wp plugin activate iworksie-health-check --path=/opt/homebrew/var/www/www.iworks.new
 ```
 
-Core is resolved from the local path `../iworks-tools-core` and, for CI, from the private GitHub VCS repo. CI needs repository secret `CORE_REPO_TOKEN` (a GitHub PAT that can read `littlegreenman70/iworks-tools-core`) exported as `COMPOSER_AUTH`.
+Core is resolved from the local path `../iworks-tools-core` in development and from the public GitHub VCS repo `littlegreenman70/iworks-tools-core` in CI.
 
 ```bash
 composer lint

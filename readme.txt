@@ -4,7 +4,7 @@ Tags: health check, site health, diagnostics, disk space, performance
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,10 +69,16 @@ No. It makes no external HTTP requests and collects no analytics.
 
 == Changelog ==
 
+= 1.0.1 =
+* Updated shared core to 1.0.1: faster, lighter disk scan.
+
 = 1.0.0 =
 * Initial release: server, WordPress, database and disk checks, report, test email, Site Health bridge, WP-CLI.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Updated shared core to 1.0.1 for a faster, lighter disk scan.
 
 = 1.0.0 =
 Initial release.
