@@ -3,7 +3,7 @@
  * Plugin Name:       iWorks.ie Health Check
  * Plugin URI:        https://www.iworks.ie
  * Description:       Read-only site health checks with plain-English fixes, disk and dead-weight finder, and a shareable report. Never changes your site.
- * Version:           1.1.1
+ * Version:           1.1.2
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            iWorks.ie
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'IWIEHC_VERSION', '1.1.1' );
+define( 'IWIEHC_VERSION', '1.1.2' );
 define( 'IWIEHC_FILE', __FILE__ );
 define( 'IWIEHC_PATH', plugin_dir_path( __FILE__ ) );
 define( 'IWIEHC_URL', plugin_dir_url( __FILE__ ) );

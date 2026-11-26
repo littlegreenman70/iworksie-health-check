@@ -38,6 +38,7 @@ final class DiskSummaryTest extends TestCase {
 				return str_replace( '\\', '/', (string) $path );
 			}
 		);
+		Functions\when( 'apply_filters' )->returnArg( 2 );
 		Functions\when( '__' )->returnArg( 1 );
 		Functions\when( 'number_format_i18n' )->alias(
 			static function ( $n, $decimals = 0 ) {

@@ -4,7 +4,7 @@ Tags: health check, site health, diagnostics, disk space, performance
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,9 @@ No. It makes no external HTTP requests and collects no analytics.
 5. Checks also appear under Tools → Site Health.
 
 == Changelog ==
+
+= 1.1.2 =
+* Backup warning no longer flags WordPress's own upgrade folder; exports are Recommended, real dumps stay Critical.
 
 = 1.1.1 =
 * Admin notices no longer break the header; clearer disk results; backup warning lists the files.

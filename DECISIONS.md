@@ -28,6 +28,7 @@
 | 2026-11-26 | `save_disk_summary` reads only `$state['result']` | Avoid depending on working keys Manager may change. |
 | 2026-11-26 | Action URLs in cached results must be `admin_url()` links | Limit XSS/open-redirect surface if a check ever adds a URL. |
 | 2026-11-26 | Require tools-core `^1.1` | Symlink asset fix and shared UI chrome ship in 1.1.0. |
+| 2026-11-26 | Backup web-root: ignore `wp-content/upgrade` and `upgrade-temp-backup` (filterable); empty folders never count; Critical only for dump/archive extensions (incl. `.wpress`/`.bak`); other backup-named files are Recommended with label "Possible backup files in the web root". | WP core's rollback folder and content exports were Critical false positives on www.iworks.new. |
 
 ## Candidates for core
 

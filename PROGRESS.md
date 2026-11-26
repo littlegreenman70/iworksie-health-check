@@ -15,6 +15,12 @@
 | 11 Release 1.0.3 | done | Contributor `littlegreenman`; tag v1.0.3 |
 | 12 Release 1.1.0 | done | Core 1.1.0 assets/design; Playwright e2e; real screenshots |
 | 13 Release 1.1.1 | done | Notices, disk UX, backup list, score colours, real screenshots; e2e green |
+| 14 Release 1.1.2 | done | Backup false positives: ignore WP upgrade folders; exports Recommended |
+
+## v1.1.2 notes (2026-11-26 Europe/Dublin)
+
+- Requires tools-core 1.1.2 (`iworks_tools_backup_ignore_paths`, empty backup dirs skipped).
+- `DeadWeightWebRootCheck`: Critical only for dumps/archives; Recommended for other backup-named files (e.g. Elementor JSON); never flag `upgrade` / `upgrade-temp-backup` or empty folders.
 
 ## v1.1.1 notes (2026-11-26 Europe/Dublin)
 
