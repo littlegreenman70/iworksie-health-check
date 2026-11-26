@@ -3,7 +3,7 @@
 | Date (Europe/Dublin) | Decision | Reason |
 |----------------------|----------|--------|
 | 2026-11-26 | Place repo at `/opt/homebrew/var/www/iworksie-health-check` | Sibling of core and the local WP test bed. |
-| 2026-11-26 | wordpress.org contributor slug `iworksie` is a placeholder | Must match the real account before submission. |
+| 2026-11-26 | wordpress.org contributor is `littlegreenman` | Plugin slug / text domain / prefix stay `iworksie-health-check`; the w.org account is separate. |
 | 2026-11-26 | Final `.wordpress-org` artwork is placeholder solid-colour wordmark images | Final design pending; Plugin Check and listing layout can proceed. |
 | 2026-11-26 | Health Check 1.0.1 only adapts DiskSummary to core 1.0.1 result shape | No Health Check feature changes beyond consuming leaner scan results. |
 | 2026-11-26 | CI strips path repo via PHP then `composer update` | `composer config --unset repositories.0` left the path entry; lock is gitignored so update is required. |
@@ -25,7 +25,7 @@
 
 ## Before wordpress.org submission
 
-- Confirm contributor account slug matches `iworksie` or update `readme.txt`.
+- Contributor in `readme.txt` is `littlegreenman` (plugin slug remains `iworksie-health-check`).
 - Replace placeholder banner/icon artwork.
 - Confirm Stable tag / SVN trunk after plugin approval.
 - Core is public (`littlegreenman70/iworks-tools-core`); no private-token CI setup.
