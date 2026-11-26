@@ -8,7 +8,7 @@
 | 2026-11-26 | CI used `CORE_REPO_TOKEN` while core was private | Superseded 2026-11-26: core is public; token/COMPOSER_AUTH removed from CI. |
 | 2026-11-26 | Health Check 1.0.1 only adapts DiskSummary to core 1.0.1 result shape | No Health Check feature changes beyond consuming leaner scan results. |
 | 2026-11-26 | CI strips path repo via PHP then `composer update` | `composer config --unset repositories.0` left the path entry; lock is gitignored so update is required. |
-| 2026-11-26 | PHP 7.4 CI uses `--ignore-platform-reqs` | Strauss 0.32 → flysystem 3 needs PHP 8; plugin runtime still targets 7.4 so unit tests keep that matrix cell. |
+| 2026-11-26 | Quality CI matrix is PHP 8.3 only | Strauss 0.32 cannot run on 7.4 (Symfony Console syntax). Runtime still declares PHP 7.4+. |
 | 2026-11-26 | PHP EOL table hard-coded with yearly update comment | Avoid remote HTTP; Site Health style local table. |
 | 2026-11-26 | Autoload owner guess uses active/inactive plugin slug prefixes with "possibly" wording | Heuristic only; never claim certainty. |
 | 2026-11-26 | Leftover DB tables are Info only | Heuristic prefix matching is too uncertain for Recommended/Critical. |
