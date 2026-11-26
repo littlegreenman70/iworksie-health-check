@@ -1,6 +1,24 @@
+/* WP admin `.button` rules can override the HTML hidden attribute. */
+.iwt-toolbar [hidden] {
+	display: none !important;
+}
+
 .iwiehc-last-checked {
 	color: #646970;
 	margin: 0 0 16px;
+}
+
+.iwiehc-web-root-risks {
+	margin: 8px 0;
+	padding-left: 1.25em;
+	font-family: Menlo, Consolas, Monaco, monospace;
+	font-size: 12px;
+}
+
+.iwiehc-scan-source {
+	margin: 0;
+	color: #646970;
+	font-size: 12px;
 }
 
 .iwiehc-disk-results {

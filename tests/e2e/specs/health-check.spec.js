@@ -86,8 +86,16 @@ add_action( 'admin_notices', static function () {
 }
 
 function clearDiskOptions() {
-	wp(['option', 'delete', 'iwiehc_job_size_scanner']);
-	wp(['option', 'delete', 'iwiehc_disk_scan']);
+	try {
+		wp(['option', 'delete', 'iwiehc_job_size_scanner']);
+	} catch (e) {
+		/* missing is fine */
+	}
+	try {
+		wp(['option', 'delete', 'iwiehc_disk_scan']);
+	} catch (e) {
+		/* missing is fine */
+	}
 }
 
 async function patchJobStartRoot(page, root) {
@@ -234,8 +242,8 @@ test.describe('iWorks.ie Health Check e2e', () => {
 					/Dead weight|Top folders|Total size/i
 				);
 				await expect(page.locator('[data-iwt-job-start]')).toContainText(/Scan again/i);
-				await expect(page.locator('[data-iwt-job-cancel]')).toBeHidden();
-				await expect(page.locator('[data-iwt-job-resume]')).toBeHidden();
+				await expect(page.locator('[data-iwt-job-cancel]')).toHaveAttribute('hidden', '');
+				await expect(page.locator('[data-iwt-job-resume]')).toHaveAttribute('hidden', '');
 			} finally {
 				rmQuiet(BUDGET_MU);
 				rmDirRecursive(FIXTURE);
