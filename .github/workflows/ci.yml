@@ -133,8 +133,48 @@ jobs:
           composer update --no-interaction --prefer-dist
           composer build
 
+      - name: Upload built plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: iworksie-health-check-build
+          path: build/iworksie-health-check
+          retention-days: 2
+
       - name: Plugin Check
         uses: wordpress/plugin-check-action@v1
         with:
           build-dir: './build/iworksie-health-check'
           exclude-directories: 'vendor,vendor-prefixed/composer'
+
+  php74-syntax:
+    name: PHP 7.4 syntax (built plugin)
+    needs: plugin-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup PHP 7.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          coverage: none
+
+      - name: Download built plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: iworksie-health-check-build
+          path: build/iworksie-health-check
+
+      - name: Lint every shipped PHP file
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r -d '' file; do
+            if ! php -l "$file" >/dev/null; then
+              echo "FAIL: $file"
+              fail=1
+            fi
+          done < <(find build/iworksie-health-check -type f -name '*.php' -print0)
+          if [ "$fail" -ne 0 ]; then
+            echo "PHP 7.4 syntax errors found."
+            exit 1
+          fi
+          echo "All shipped PHP files parse on PHP 7.4."

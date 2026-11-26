@@ -149,7 +149,6 @@
 			button.textContent = strings.running || 'Running…';
 		}
 		list.innerHTML = '';
-		var collected = {};
 		var chain = Promise.resolve();
 		cfg.checks.forEach(function (check) {
 			chain = chain.then(function () {
@@ -166,7 +165,6 @@
 									description: 'Request failed'
 							  };
 					result.id = check.id;
-					collected[check.id] = result;
 					list.insertAdjacentHTML('beforeend', cardHtml(result, strings));
 					updateSummary(list, strings);
 				});
@@ -177,9 +175,9 @@
 				button.disabled = false;
 				button.textContent = button.getAttribute('data-label') || 'Run all checks';
 			}
+			// Server already stored each result; this only stamps "last checked".
 			post('iwiehc_cache_results', {
-				nonce: cfg.checksNonce,
-				results: collected
+				nonce: cfg.checksNonce
 			}).then(function (json) {
 				if (json && json.success && json.data && json.data.last_checked) {
 					var el = document.querySelector('.iwiehc-last-checked');

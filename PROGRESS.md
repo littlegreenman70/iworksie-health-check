@@ -7,14 +7,17 @@
 | 3 Checks | done | 19 checks across server/WP/DB/disk |
 | 4 Screens | done | Overview, Disk, Report, Tools + Site Health + WP-CLI |
 | 5 readme.txt | done | wordpress.org format |
-| 6 Tests | done | Unit 8 OK; Integration 5 OK; Plugin Check clean |
-| 7 Build and CI | done | Public core; path repo stripped in CI; quality on PHP 8.3 |
-| 8 GitHub | done | https://github.com/littlegreenman70/iworksie-health-check tag v1.0.0 |
-| 9 Core 1.0.1 | done | DiskSummary lean scan; bump 1.0.1; CI green run 45844881367 |
+| 6 Tests | done | Unit 11 OK; Integration 5 OK; Plugin Check via CI |
+| 7 Build and CI | done | Public core; PHP 8.3 quality + PHP 7.4 `php -l` on build |
+| 8 GitHub | done | tag v1.0.0 |
+| 9 Core 1.0.1 | done | DiskSummary lean scan; bump 1.0.1 |
+| 10 Review 1.0.2 | done | DiskSummary tests, server-side results, PHP 7.4 lint job |
 
-## v1.0.1 notes (2026-11-26 Europe/Dublin)
+## v1.0.2 notes (2026-11-26 Europe/Dublin)
 
-- `composer update iworksie/tools-core` → 1.0.1
-- Removed `CORE_REPO_TOKEN` / `COMPOSER_AUTH` from CI and docs
-- CI strips path repository then `composer update` against public VCS
-- Tag `v1.0.1`
+- Unit tests for DiskSummary against core 1.0.1 result fixture (incl. overflow).
+- `save_disk_summary` uses only `$state['result']`.
+- Each check result stored server-side via priority-5 `iwiehc_run_check`; finished JS call only stamps time.
+- Action URLs limited to `admin_url()` when caching.
+- PHP 7.4 syntax lint on built plugin artifact.
+- Tag `v1.0.2`.

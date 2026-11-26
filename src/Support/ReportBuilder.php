@@ -81,6 +81,9 @@ final class ReportBuilder {
 			if ( isset( $disk['dead_bytes'] ) ) {
 				$markdown .= '- Dead weight: ' . Bytes::format( (int) $disk['dead_bytes'] ) . "\n";
 			}
+			if ( ! empty( $disk['dead_overflow'] ) ) {
+				$markdown .= '- Dead-weight overflow: ' . (int) $disk['dead_overflow'] . ' more files, ' . Bytes::format( isset( $disk['dead_overflow_bytes'] ) ? (int) $disk['dead_overflow_bytes'] : 0 ) . "\n";
+			}
 			if ( ! empty( $disk['dead_items'] ) && is_array( $disk['dead_items'] ) ) {
 				$markdown .= "- Dead-weight paths:\n";
 				foreach ( array_slice( $disk['dead_items'], 0, 20 ) as $item ) {

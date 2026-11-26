@@ -7,11 +7,14 @@
 
 namespace IWorksIE\HealthCheck\Admin;
 
+use IWorksIE\HealthCheck\Plugin;
 use IWorksIE\HealthCheck\Support\DiskSummary;
 use IWorksIE\HealthCheck\Support\ResultsCache;
+use IWorksIE\HealthCheck\Vendor\IWorksIE\Core\Checks\Result;
+use IWorksIE\HealthCheck\Vendor\IWorksIE\Core\Strings;
 
 /**
- * Cache results, finalise disk scan, test email.
+ * Run/cache checks, finalise disk scan, test email.
  */
 final class Ajax {
 
@@ -21,13 +24,51 @@ final class Ajax {
 	 * @return void
 	 */
 	public function hooks() {
+		// Priority 5 so we run (and die) before core's iwiehc_run_check handler.
+		add_action( 'wp_ajax_iwiehc_run_check', array( $this, 'run_check' ), 5 );
 		add_action( 'wp_ajax_iwiehc_cache_results', array( $this, 'cache_results' ) );
 		add_action( 'wp_ajax_iwiehc_save_disk_summary', array( $this, 'save_disk_summary' ) );
 		add_action( 'wp_ajax_iwiehc_test_email', array( $this, 'test_email' ) );
 	}
 
 	/**
-	 * Persist overview results after a full run.
+	 * Run one check via core's registry and store Result::to_array() server-side.
+	 *
+	 * @return void
+	 */
+	public function run_check() {
+		check_ajax_referer( 'iwiehc_checks', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'manage_network_options' ) ) {
+			wp_send_json_error( array( 'message' => 'forbidden' ), 403 );
+		}
+
+		$core = Plugin::instance()->core();
+		if ( null === $core ) {
+			wp_send_json_error( array( 'message' => 'not_booted' ), 500 );
+		}
+
+		$id    = isset( $_POST['check_id'] ) ? sanitize_key( wp_unslash( (string) $_POST['check_id'] ) ) : '';
+		$check = $core->checks()->get( $id );
+		if ( null === $check ) {
+			wp_send_json_error( array( 'message' => 'unknown_check' ), 404 );
+		}
+
+		try {
+			$result = $check->run();
+		} catch ( \Throwable $e ) {
+			$result = Result::critical(
+				$check->label(),
+				Strings::get( 'check_failed', array( 'message' => $e->getMessage() ) )
+			);
+		}
+
+		$payload = $result->to_array();
+		ResultsCache::save_one( $id, $payload );
+		wp_send_json_success( $payload );
+	}
+
+	/**
+	 * Stamp "last checked" after a finished UI run. Does not accept client results.
 	 *
 	 * @return void
 	 */
@@ -36,33 +77,7 @@ final class Ajax {
 		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'manage_network_options' ) ) {
 			wp_send_json_error( array( 'message' => 'forbidden' ), 403 );
 		}
-		$raw = isset( $_POST['results'] ) ? wp_unslash( $_POST['results'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		if ( is_string( $raw ) ) {
-			$decoded = json_decode( $raw, true );
-		} elseif ( is_array( $raw ) ) {
-			$decoded = $raw;
-		} else {
-			$decoded = null;
-		}
-		if ( ! is_array( $decoded ) ) {
-			wp_send_json_error( array( 'message' => 'invalid' ), 400 );
-		}
-		$clean = array();
-		foreach ( $decoded as $id => $row ) {
-			if ( ! is_array( $row ) ) {
-				continue;
-			}
-			$clean[ sanitize_key( (string) $id ) ] = array(
-				'status'      => isset( $row['status'] ) ? sanitize_key( (string) $row['status'] ) : 'info',
-				'label'       => isset( $row['label'] ) ? sanitize_text_field( (string) $row['label'] ) : '',
-				'description' => isset( $row['description'] ) ? sanitize_textarea_field( (string) $row['description'] ) : '',
-				'why'         => isset( $row['why'] ) ? sanitize_textarea_field( (string) $row['why'] ) : '',
-				'fix'         => isset( $row['fix'] ) ? sanitize_textarea_field( (string) $row['fix'] ) : '',
-				'data'        => isset( $row['data'] ) && is_array( $row['data'] ) ? $row['data'] : array(),
-				'actions'     => isset( $row['actions'] ) && is_array( $row['actions'] ) ? $row['actions'] : array(),
-			);
-		}
-		ResultsCache::save( $clean );
+		ResultsCache::touch();
 		wp_send_json_success(
 			array(
 				'last_checked' => ResultsCache::last_checked_label(),
@@ -71,7 +86,7 @@ final class Ajax {
 	}
 
 	/**
-	 * Persist disk scan summary from job state.
+	 * Persist disk scan summary from the finished job result only.
 	 *
 	 * @return void
 	 */
@@ -81,10 +96,10 @@ final class Ajax {
 			wp_send_json_error( array( 'message' => 'forbidden' ), 403 );
 		}
 		$state = get_option( 'iwiehc_job_size_scanner', null );
-		if ( ! is_array( $state ) ) {
-			wp_send_json_error( array( 'message' => 'no_state' ), 400 );
+		if ( ! is_array( $state ) || empty( $state['result'] ) || ! is_array( $state['result'] ) ) {
+			wp_send_json_error( array( 'message' => 'no_result' ), 400 );
 		}
-		$summary = DiskSummary::from_job( $state );
+		$summary = DiskSummary::from_job( array( 'result' => $state['result'] ) );
 		ResultsCache::save_disk( $summary );
 		wp_send_json_success( $summary );
 	}

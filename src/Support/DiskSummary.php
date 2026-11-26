@@ -16,21 +16,27 @@ namespace IWorksIE\HealthCheck\Support;
 final class DiskSummary {
 
 	/**
-	 * Build a summary from job result / state.
+	 * Build a summary from a finished job result (core 1.0.1 shape).
 	 *
-	 * @param array<string,mixed> $payload Job finish or state with result.
+	 * Prefer passing `$state['result']` from the job option. A bare finish
+	 * array is also accepted for tests and CLI.
+	 *
+	 * @param array<string,mixed> $payload Job finish array or state with result.
 	 * @return array<string,mixed>
 	 */
 	public static function from_job( array $payload ) {
 		$result = isset( $payload['result'] ) && is_array( $payload['result'] ) ? $payload['result'] : $payload;
 
-		$total_bytes = isset( $result['total_bytes'] ) ? (int) $result['total_bytes'] : ( isset( $payload['total_bytes'] ) ? (int) $payload['total_bytes'] : 0 );
-		$tree        = isset( $result['tree'] ) && is_array( $result['tree'] ) ? $result['tree'] : ( isset( $payload['tree'] ) && is_array( $payload['tree'] ) ? $payload['tree'] : array() );
+		$total_bytes = isset( $result['total_bytes'] ) ? (int) $result['total_bytes'] : 0;
+		$tree        = isset( $result['tree'] ) && is_array( $result['tree'] ) ? $result['tree'] : array();
 		$top_files   = isset( $result['top_files'] ) && is_array( $result['top_files'] ) ? $result['top_files'] : array();
 		$dead        = isset( $result['dead_weight'] ) && is_array( $result['dead_weight'] ) ? $result['dead_weight'] : array();
 		if ( empty( $dead ) && isset( $result['dead_files'] ) && is_array( $result['dead_files'] ) ) {
 			$dead = $result['dead_files'];
 		}
+
+		$overflow       = isset( $result['dead_files_overflow'] ) ? (int) $result['dead_files_overflow'] : 0;
+		$overflow_bytes = isset( $result['dead_files_overflow_bytes'] ) ? (int) $result['dead_files_overflow_bytes'] : 0;
 
 		$breakdown = self::wp_content_breakdown_from_tree( $tree );
 		$top       = self::top_folders_from_tree( $tree, 20 );
@@ -57,22 +63,52 @@ final class DiskSummary {
 				'id'     => ( isset( $item['dead']['id'] ) ? (string) $item['dead']['id'] : ( isset( $item['id'] ) ? (string) $item['id'] : '' ) ),
 			);
 		}
-		if ( isset( $result['dead_files_overflow_bytes'] ) ) {
-			$dead_bytes += (int) $result['dead_files_overflow_bytes'];
-		}
+		$dead_bytes += $overflow_bytes;
 
 		return array(
-			'time'           => time(),
-			'total_bytes'    => $total_bytes,
-			'total_files'    => isset( $result['total_files'] ) ? (int) $result['total_files'] : 0,
-			'breakdown'      => $breakdown,
-			'top_folders'    => $top,
-			'top_files'      => $top_files,
-			'dead_items'     => $dead_items,
-			'dead_bytes'     => $dead_bytes,
-			'web_root_risks' => $risks,
-			'unreadable'     => isset( $result['unreadable'] ) ? $result['unreadable'] : array(),
+			'time'                => time(),
+			'total_bytes'         => $total_bytes,
+			'total_files'         => isset( $result['total_files'] ) ? (int) $result['total_files'] : 0,
+			'breakdown'           => $breakdown,
+			'top_folders'         => $top,
+			'top_files'           => $top_files,
+			'dead_items'          => $dead_items,
+			'dead_bytes'          => $dead_bytes,
+			'dead_overflow'       => $overflow,
+			'dead_overflow_bytes' => $overflow_bytes,
+			'web_root_risks'      => $risks,
+			'unreadable'          => isset( $result['unreadable'] ) ? $result['unreadable'] : array(),
+			'unreadable_count'    => isset( $result['unreadable_count'] ) ? (int) $result['unreadable_count'] : 0,
 		);
+	}
+
+	/**
+	 * Plain-English "you could free about X" line, including overflow.
+	 *
+	 * @param array<string,mixed> $summary Summary from from_job().
+	 * @return string
+	 */
+	public static function freeable_message( array $summary ) {
+		$dead = isset( $summary['dead_bytes'] ) ? (int) $summary['dead_bytes'] : 0;
+		if ( $dead <= 0 ) {
+			return '';
+		}
+		$message = sprintf(
+			/* translators: %s: size */
+			__( 'You could free about %s by removing these (after a backup and with your developer). This plugin never deletes files.', 'iworksie-health-check' ),
+			Bytes::format( $dead )
+		);
+		$overflow = isset( $summary['dead_overflow'] ) ? (int) $summary['dead_overflow'] : 0;
+		$obytes   = isset( $summary['dead_overflow_bytes'] ) ? (int) $summary['dead_overflow_bytes'] : 0;
+		if ( $overflow > 0 ) {
+			$message .= ' ' . sprintf(
+				/* translators: 1: file count, 2: size */
+				__( 'and %1$s more files, %2$s', 'iworksie-health-check' ),
+				number_format_i18n( $overflow ),
+				Bytes::format( $obytes )
+			);
+		}
+		return $message;
 	}
 
 	/**

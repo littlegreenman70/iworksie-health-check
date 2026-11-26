@@ -1,0 +1,112 @@
+{
+	"total_bytes": 2383505463,
+	"total_files": 49837,
+	"unreadable": [],
+	"unreadable_count": 0,
+	"top_files": [
+		{"path": "/var/www/site/wp-content/uploads/video/huge.mp4", "bytes": 524288000},
+		{"path": "/var/www/site/wp-content/uploads/backup-old.zip", "bytes": 314572800},
+		{"path": "/var/www/site/wp-content/debug.log", "bytes": 104857600},
+		{"path": "/var/www/site/wp-includes/js/dist/block-library.js", "bytes": 5242880},
+		{"path": "/var/www/site/wp-admin/css/colors/blue/colors.min.css", "bytes": 1048576}
+	],
+	"dead_weight": [
+		{
+			"path": "/var/www/site/backup.sql",
+			"bytes": 52428800,
+			"is_dir": false,
+			"dead": {"id": "sql_large", "reason": "Large SQL dump"}
+		},
+		{
+			"path": "/var/www/site/wp-content/uploads/backup-old.zip",
+			"bytes": 314572800,
+			"is_dir": false,
+			"dead": {"id": "archive", "reason": "Archive file"}
+		},
+		{
+			"path": "/var/www/site/wp-content/cache",
+			"bytes": 104857600,
+			"is_dir": true,
+			"dead": {"id": "cache_dir", "reason": "Cache directory"}
+		},
+		{
+			"path": "/var/www/site/wp-content/debug.log",
+			"bytes": 104857600,
+			"is_dir": false,
+			"dead": {"id": "log", "reason": "Log file"}
+		},
+		{
+			"path": "/var/www/site/.git",
+			"bytes": 87248790,
+			"is_dir": true,
+			"dead": {"id": "vcs", "reason": "Version control metadata"}
+		}
+	],
+	"dead_files_overflow": 312,
+	"dead_files_overflow_bytes": 1288490188,
+	"tree": {
+		"path": "/var/www/site",
+		"bytes": 2383505463,
+		"files": 49837,
+		"is_dir": true,
+		"children": [
+			{
+				"path": "/var/www/site/.git",
+				"bytes": 87248790,
+				"files": 1200,
+				"is_dir": true,
+				"children": []
+			},
+			{
+				"path": "/var/www/site/wp-admin",
+				"bytes": 9587367,
+				"files": 800,
+				"is_dir": true,
+				"children": []
+			},
+			{
+				"path": "/var/www/site/wp-content",
+				"bytes": 1837750042,
+				"files": 40000,
+				"is_dir": true,
+				"children": [
+					{
+						"path": "/var/www/site/wp-content/uploads",
+						"bytes": 1100000000,
+						"files": 25000,
+						"is_dir": true,
+						"children": []
+					},
+					{
+						"path": "/var/www/site/wp-content/plugins",
+						"bytes": 420000000,
+						"files": 12000,
+						"is_dir": true,
+						"children": []
+					},
+					{
+						"path": "/var/www/site/wp-content/themes",
+						"bytes": 80000000,
+						"files": 2000,
+						"is_dir": true,
+						"children": []
+					},
+					{
+						"path": "/var/www/site/wp-content/cache",
+						"bytes": 104857600,
+						"files": 500,
+						"is_dir": true,
+						"children": []
+					}
+				]
+			},
+			{
+				"path": "/var/www/site/wp-includes",
+				"bytes": 85460738,
+				"files": 3000,
+				"is_dir": true,
+				"children": []
+			}
+		]
+	}
+}

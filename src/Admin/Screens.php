@@ -8,6 +8,7 @@
 namespace IWorksIE\HealthCheck\Admin;
 
 use IWorksIE\HealthCheck\Support\Bytes;
+use IWorksIE\HealthCheck\Support\DiskSummary;
 use IWorksIE\HealthCheck\Support\ReportBuilder;
 use IWorksIE\HealthCheck\Support\ResultsCache;
 use IWorksIE\HealthCheck\Vendor\IWorksIE\Core\Checks\Result;
@@ -161,7 +162,6 @@ final class Screens {
 	 */
 	private function echo_disk_results( array $disk ) {
 		$total = isset( $disk['total_bytes'] ) ? (int) $disk['total_bytes'] : 0;
-		$dead  = isset( $disk['dead_bytes'] ) ? (int) $disk['dead_bytes'] : 0;
 		echo '<p><strong>' . esc_html__( 'Total scanned:', 'iworksie-health-check' ) . '</strong> ' . esc_html( Bytes::format( $total ) ) . '</p>';
 		if ( ! empty( $disk['breakdown'] ) && is_array( $disk['breakdown'] ) ) {
 			$rows = array();
@@ -201,13 +201,10 @@ final class Screens {
 		}
 		if ( ! empty( $disk['dead_items'] ) && is_array( $disk['dead_items'] ) ) {
 			echo '<h3>' . esc_html__( 'Dead weight', 'iworksie-health-check' ) . '</h3>';
-			echo '<p>' . esc_html(
-				sprintf(
-					/* translators: %s: size */
-					__( 'You could free about %s by removing these (after a backup and with your developer). This plugin never deletes files.', 'iworksie-health-check' ),
-					Bytes::format( $dead )
-				)
-			) . '</p>';
+			$freeable = DiskSummary::freeable_message( $disk );
+			if ( '' !== $freeable ) {
+				echo '<p>' . esc_html( $freeable ) . '</p>';
+			}
 			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Warning: take a backup and check with your developer before deleting anything.', 'iworksie-health-check' ) . '</p></div>';
 			$rows = array();
 			foreach ( $disk['dead_items'] as $item ) {

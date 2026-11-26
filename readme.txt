@@ -4,7 +4,7 @@ Tags: health check, site health, diagnostics, disk space, performance
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Read-only site health checks with plain-English fixes, disk/dead-weight finder a
 
 iWorks.ie Health Check is the safe, read-only alternative to heavy troubleshooting plugins.
 
-**Read-only: this plugin never changes your site.** There is no troubleshooting mode, no file deletion, and no settings that alter behaviour.
+**Read-only: this plugin never changes your site's settings, content or files.** (It only stores its own check results, which are removed when you delete the plugin.) There is no troubleshooting mode, no file deletion, and no settings that alter behaviour.
 
 It checks your server, WordPress, database and disk space, then explains each finding in plain English with:
 
@@ -69,6 +69,9 @@ No. It makes no external HTTP requests and collects no analytics.
 
 == Changelog ==
 
+= 1.0.2 =
+* Disk summary updated for the lighter scanner; results are now recorded server-side.
+
 = 1.0.1 =
 * Updated shared core to 1.0.1: faster, lighter disk scan.
 
@@ -76,6 +79,9 @@ No. It makes no external HTTP requests and collects no analytics.
 * Initial release: server, WordPress, database and disk checks, report, test email, Site Health bridge, WP-CLI.
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Disk summary and server-side result caching improvements.
 
 = 1.0.1 =
 Updated shared core to 1.0.1 for a faster, lighter disk scan.
