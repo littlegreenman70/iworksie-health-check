@@ -9,4 +9,4 @@
 | 5 readme.txt | done | wordpress.org format |
 | 6 Tests | done | Unit 8 OK; Integration 5 OK; Plugin Check clean |
 | 7 Build and CI | done | build zip + ci.yml (needs CORE_REPO_TOKEN) |
-| 8 GitHub | in progress | Create private repo + tag v1.0.0 |
+| 8 GitHub | done | https://github.com/littlegreenman70/iworksie-health-check tag v1.0.0 |
