@@ -13,18 +13,11 @@
 | 9 Core 1.0.1 | done | DiskSummary lean scan; bump 1.0.1 |
 | 10 Review 1.0.2 | done | DiskSummary tests, server-side results, PHP 7.4 lint job |
 | 11 Release 1.0.3 | done | Contributor `littlegreenman`; tag v1.0.3 |
+| 12 Release 1.1.0 | done | Core 1.1.0 assets/design; Playwright e2e; real screenshots |
 
-## v1.0.3 notes (2026-11-26 Europe/Dublin)
+## v1.1.0 notes (2026-11-26 Europe/Dublin)
 
-- `readme.txt` Contributors set to `littlegreenman` (plugin slug unchanged).
-- DECISIONS / Before-submission checklist updated.
-- Tag `v1.0.3`; zip copied to `~/Downloads/iworksie-health-check.zip`.
-
-## v1.0.2 notes (2026-11-26 Europe/Dublin)
-
-- Unit tests for DiskSummary against core 1.0.1 result fixture (incl. overflow).
-- `save_disk_summary` uses only `$state['result']`.
-- Each check result stored server-side via priority-5 `iwiehc_run_check`; finished JS call only stamps time.
-- Action URLs limited to `admin_url()` when caching.
-- PHP 7.4 syntax lint on built plugin artifact.
-- Tag `v1.0.2`.
+- Consumes `iworksie/tools-core` 1.1.0 (symlink-safe `plugins_url` assets + polished UI).
+- Screens adapted: empty state, accordion results, disk stat tiles + bar chart, monospace report, tools card.
+- Tagline matches readme: "Read-only: never changes your site's settings, content or files."
+- Playwright e2e in `tests/e2e/` with WP-CLI auth cookies; real screenshots in `.wordpress-org/` and `~/Downloads/iworks-health-check-screens/`.

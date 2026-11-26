@@ -11,7 +11,7 @@
 	],
 	"require": {
 		"php": ">=7.4",
-		"iworksie/tools-core": "^1.0 || @dev"
+		"iworksie/tools-core": "^1.1 || @dev"
 	},
 	"require-dev": {
 		"brianhenryie/strauss": "^0.32",

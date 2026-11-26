@@ -54,7 +54,7 @@ final class Screens {
 			array(
 				'title'   => (string) $this->core->config( 'name' ),
 				'version' => (string) $this->core->config( 'version' ),
-				'tagline' => __( 'Read-only health checks with plain-English fixes. This plugin never changes your site.', 'iworksie-health-check' ),
+				'tagline' => __( 'Read-only: never changes your site\'s settings, content or files.', 'iworksie-health-check' ),
 				'tabs'    => $tabs,
 			),
 			function ( $active ) {
@@ -80,17 +80,20 @@ final class Screens {
 	 * @return void
 	 */
 	private function render_overview() {
-		$cache   = ResultsCache::load();
-		$good    = 0;
-		$rec     = 0;
-		$crit    = 0;
-		$grouped = array(
+		$cache       = ResultsCache::load();
+		$good        = 0;
+		$rec         = 0;
+		$crit        = 0;
+		$info        = 0;
+		$grouped     = array(
 			'critical'    => array(),
 			'recommended' => array(),
 			'good'        => array(),
 			'info'        => array(),
 		);
-		if ( null !== $cache ) {
+		$has_results = null !== $cache && ! empty( $cache['results'] );
+
+		if ( $has_results ) {
 			foreach ( $cache['results'] as $id => $row ) {
 				$result = Result::from_array( (array) $row );
 				$status = $result->status();
@@ -104,35 +107,51 @@ final class Screens {
 					++$rec;
 				} elseif ( 'critical' === $status ) {
 					++$crit;
+				} elseif ( 'info' === $status ) {
+					++$info;
 				}
 			}
 		}
 
 		echo '<p class="iwiehc-last-checked">' . esc_html( ResultsCache::last_checked_label() ) . '</p>';
+
+		if ( ! $has_results ) {
+			echo '<div class="iwt-empty" data-iwt-empty>';
+			echo '<div class="iwt-empty__icon" aria-hidden="true"><span class="dashicons dashicons-heart"></span></div>';
+			echo '<h2 class="iwt-empty__title">' . esc_html( Strings::get( 'empty_title' ) ) . '</h2>';
+			echo '<p class="iwt-empty__body">' . esc_html( Strings::get( 'empty_body' ) ) . '</p>';
+			echo '<p class="iwt-empty__action"><button type="button" class="button button-primary button-hero" id="iwiehc-run-checks" data-iwiehc-run-checks="1">' . esc_html( Strings::get( 'run_first' ) ) . '</button></p>';
+			echo '</div>';
+			echo '<div class="iwt-summary-wrap" data-iwt-summary-wrap hidden>';
+			echo '<div class="iwt-summary" data-iwt-summary role="status"></div>';
+			echo '</div>';
+			echo '<div data-iwt-results aria-live="polite" aria-label="' . esc_attr__( 'Health check results', 'iworksie-health-check' ) . '"></div>';
+			return;
+		}
+
 		echo '<div class="iwt-toolbar">';
 		echo '<button type="button" class="button button-primary" id="iwiehc-run-checks" data-iwiehc-run-checks="1">' . esc_html( Strings::get( 'run_checks' ) ) . '</button>';
 		echo '</div>';
-		echo '<div class="iwt-summary" data-iwt-summary role="status">' . UI::summary_bar( $good, $rec, $crit ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo '<div class="iwt-summary-wrap" data-iwt-summary-wrap>';
+		echo UI::summary_bar( $good, $rec, $crit, $info ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo '</div>';
 		echo '<div data-iwt-results aria-live="polite" aria-label="' . esc_attr__( 'Health check results', 'iworksie-health-check' ) . '">';
 		foreach ( array( 'critical', 'recommended', 'info', 'good' ) as $status ) {
 			if ( empty( $grouped[ $status ] ) ) {
 				continue;
 			}
-			$open = ( 'good' !== $status );
-			echo '<section class="iwiehc-group iwiehc-group--' . esc_attr( $status ) . '">';
-			echo '<h2>' . esc_html( ucfirst( $status ) ) . '</h2>';
-			foreach ( $grouped[ $status ] as $result ) {
-				$html = UI::result_card( $result );
-				if ( ! $open ) {
-					$html = str_replace( '<details', '<details', $html );
-					echo '<details class="iwiehc-collapsed-good"><summary>' . esc_html( $result->label() ) . ' — ' . esc_html__( 'Good', 'iworksie-health-check' ) . '</summary>';
-					echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					echo '</details>';
-				} else {
-					echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				}
+			$count = count( $grouped[ $status ] );
+			echo '<section class="iwt-group iwt-group--' . esc_attr( $status ) . ( 'good' === $status ? ' is-collapsed' : '' ) . '" data-group="' . esc_attr( $status ) . '">';
+			if ( 'good' === $status ) {
+				echo '<button type="button" class="iwt-group__toggle" aria-expanded="false" data-iwt-group-toggle>' . esc_html( Strings::get( 'passed_checks', array( 'count' => (string) $count ) ) ) . '</button>';
+			} else {
+				echo UI::group_heading( $status, $count ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
-			echo '</section>';
+			echo '<div class="iwt-group__results">';
+			foreach ( $grouped[ $status ] as $result ) {
+				echo UI::result_card( $result, 'critical' === $status ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+			echo '</div></section>';
 		}
 		echo '</div>';
 	}
@@ -161,26 +180,50 @@ final class Screens {
 	 * @return void
 	 */
 	private function echo_disk_results( array $disk ) {
-		$total = isset( $disk['total_bytes'] ) ? (int) $disk['total_bytes'] : 0;
-		echo '<p><strong>' . esc_html__( 'Total scanned:', 'iworksie-health-check' ) . '</strong> ' . esc_html( Bytes::format( $total ) ) . '</p>';
-		if ( ! empty( $disk['breakdown'] ) && is_array( $disk['breakdown'] ) ) {
-			$rows = array();
-			foreach ( $disk['breakdown'] as $key => $bytes ) {
-				$rows[] = array(
-					'area' => (string) $key,
-					'size' => Bytes::format( (int) $bytes ),
-				);
+		$total      = isset( $disk['total_bytes'] ) ? (int) $disk['total_bytes'] : 0;
+		$breakdown  = ( isset( $disk['breakdown'] ) && is_array( $disk['breakdown'] ) ) ? $disk['breakdown'] : array();
+		$wp_content = 0;
+		foreach ( array( 'uploads', 'plugins', 'themes', 'other' ) as $key ) {
+			if ( isset( $breakdown[ $key ] ) ) {
+				$wp_content += (int) $breakdown[ $key ];
 			}
-			echo '<h3>' . esc_html__( 'wp-content breakdown', 'iworksie-health-check' ) . '</h3>';
-			$breakdown_table = UI::table(
-				array(
-					'area' => __( 'Area', 'iworksie-health-check' ),
-					'size' => __( 'Size', 'iworksie-health-check' ),
-				),
-				$rows
-			);
-			echo $breakdown_table; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- UI::table escapes.
 		}
+		$could_free = isset( $disk['dead_bytes'] ) ? (int) $disk['dead_bytes'] : 0;
+
+		echo '<div class="iwt-stat-tiles">';
+		echo '<div class="iwt-stat-tile"><p class="iwt-stat-tile__label">' . esc_html__( 'Total size', 'iworksie-health-check' ) . '</p>';
+		echo '<p class="iwt-stat-tile__value">' . esc_html( Bytes::format( $total ) ) . '</p></div>';
+		echo '<div class="iwt-stat-tile"><p class="iwt-stat-tile__label">' . esc_html__( 'wp-content', 'iworksie-health-check' ) . '</p>';
+		echo '<p class="iwt-stat-tile__value">' . esc_html( Bytes::format( $wp_content > 0 ? $wp_content : $total ) ) . '</p></div>';
+		echo '<div class="iwt-stat-tile"><p class="iwt-stat-tile__label">' . esc_html__( 'Could free', 'iworksie-health-check' ) . '</p>';
+		echo '<p class="iwt-stat-tile__value">' . esc_html( Bytes::format( $could_free ) ) . '</p></div>';
+		echo '</div>';
+
+		if ( ! empty( $breakdown ) ) {
+			$sum = 0;
+			foreach ( $breakdown as $bytes ) {
+				$sum += (int) $bytes;
+			}
+			$sum = max( 1, $sum );
+			echo '<div class="iwt-bar-chart" aria-label="' . esc_attr__( 'wp-content breakdown', 'iworksie-health-check' ) . '">';
+			echo '<div class="iwt-bar-chart__track">';
+			foreach ( array( 'uploads', 'plugins', 'themes', 'other' ) as $key ) {
+				$bytes = isset( $breakdown[ $key ] ) ? (int) $breakdown[ $key ] : 0;
+				if ( $bytes <= 0 ) {
+					continue;
+				}
+				$pct = max( 1, (int) round( ( $bytes / $sum ) * 100 ) );
+				echo '<span class="iwt-bar-chart__seg iwt-bar-chart__seg--' . esc_attr( $key ) . '" style="width:' . esc_attr( (string) $pct ) . '%" title="' . esc_attr( $key . ': ' . Bytes::format( $bytes ) ) . '"></span>';
+			}
+			echo '</div><ul class="iwt-bar-chart__legend">';
+			foreach ( array( 'uploads', 'plugins', 'themes', 'other' ) as $key ) {
+				$bytes = isset( $breakdown[ $key ] ) ? (int) $breakdown[ $key ] : 0;
+				echo '<li><span class="iwt-bar-chart__swatch iwt-bar-chart__seg--' . esc_attr( $key ) . '" aria-hidden="true"></span>';
+				echo esc_html( ucfirst( $key ) ) . ': ' . esc_html( Bytes::format( $bytes ) ) . '</li>';
+			}
+			echo '</ul></div>';
+		}
+
 		if ( ! empty( $disk['top_folders'] ) && is_array( $disk['top_folders'] ) ) {
 			$rows = array();
 			foreach ( array_slice( $disk['top_folders'], 0, 20 ) as $folder ) {
@@ -237,16 +280,14 @@ final class Screens {
 		$disk     = ResultsCache::load_disk();
 		$results  = null !== $cache ? $cache['results'] : array();
 		$markdown = ReportBuilder::build( $results, $disk );
-		$prefix   = (string) $this->core->config( 'prefix' );
 		$url      = $this->core->report()->store_for_download( $markdown );
 
 		echo '<div class="notice notice-info inline"><p>' . esc_html__( 'This report lists plugin names and versions. It does not include passwords, salts, API keys, or full email addresses (only the admin email domain).', 'iworksie-health-check' ) . '</p></div>';
-		echo '<div class="iwt-toolbar">';
+		echo '<div class="iwt-report-actions iwt-toolbar">';
 		echo '<button type="button" class="button button-primary" data-iwt-copy="iwiehc-report-source">' . esc_html( Strings::get( 'copy_report' ) ) . '</button>';
-		echo '<a class="button" href="' . esc_url( $url ) . '">' . esc_html( Strings::get( 'download_report' ) ) . '</a>';
+		echo '<a class="button" href="' . esc_url( $url ) . '" data-iwt-download-report download="iworksie-health-check-report.md">' . esc_html( Strings::get( 'download_report' ) ) . '</a>';
 		echo '</div>';
-		echo '<pre id="iwiehc-report-source" class="iwiehc-report">' . esc_html( $markdown ) . '</pre>';
-		unset( $prefix );
+		echo '<pre id="iwiehc-report-source" class="iwt-report-box iwiehc-report">' . esc_html( $markdown ) . '</pre>';
 	}
 
 	/**
@@ -254,9 +295,11 @@ final class Screens {
 	 */
 	private function render_tools() {
 		$nonce = wp_create_nonce( 'iwiehc_test_email' );
+		echo '<div class="iwt-card iwiehc-tools-card">';
 		echo '<h2>' . esc_html__( 'Send test email', 'iworksie-health-check' ) . '</h2>';
 		echo '<p>' . esc_html__( 'Sends a test message to the site admin email via wp_mail(). “Sent” means WordPress handed the message to the mail system, not that it arrived in an inbox. If mail fails, an SMTP plugin is usually the fix (a future iWorks.ie SMTP plugin is planned).', 'iworksie-health-check' ) . '</p>';
 		echo '<p><button type="button" class="button button-primary" id="iwiehc-send-test-email" data-nonce="' . esc_attr( $nonce ) . '">' . esc_html__( 'Send test email', 'iworksie-health-check' ) . '</button></p>';
 		echo '<div id="iwiehc-test-email-result" class="iwiehc-test-email-result" aria-live="polite"></div>';
+		echo '</div>';
 	}
 }

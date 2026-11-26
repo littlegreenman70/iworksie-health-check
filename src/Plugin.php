@@ -89,7 +89,7 @@ final class Plugin {
 				'wporg_url'   => 'https://wordpress.org/plugins/iworksie-health-check/',
 				'description' => __( 'Read-only health check: server, WordPress, database, disk space and dead weight, with plain-English fixes.', 'iworksie-health-check' ),
 				'icon'        => 'dashicons-heart',
-				'tagline'     => __( 'Read-only. Never changes your site.', 'iworksie-health-check' ),
+				'tagline'     => __( 'Read-only: never changes your site\'s settings, content or files.', 'iworksie-health-check' ),
 			)
 		);
 

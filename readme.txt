@@ -4,7 +4,7 @@ Tags: health check, site health, diagnostics, disk space, performance
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.3
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,9 @@ No. It makes no external HTTP requests and collects no analytics.
 
 == Changelog ==
 
+= 1.1.0 =
+* Fixed styles not loading on some installs; refreshed design.
+
 = 1.0.3 =
 * Readme contributor updated.
 
@@ -82,6 +85,9 @@ No. It makes no external HTTP requests and collects no analytics.
 * Initial release: server, WordPress, database and disk checks, report, test email, Site Health bridge, WP-CLI.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Fixed styles not loading on some installs; refreshed design.
 
 = 1.0.3 =
 Readme contributor updated.

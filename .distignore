@@ -17,5 +17,7 @@ bin
 tests
 vendor
 node_modules
+test-results
+playwright-report
 *.log
 *.zip
