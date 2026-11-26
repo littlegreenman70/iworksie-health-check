@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    name: PHP ${{ matrix.php }} quality
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require CORE_REPO_TOKEN
+        env:
+          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
+        run: |
+          if [ -z "$CORE_REPO_TOKEN" ]; then
+            echo "::error::Repository secret CORE_REPO_TOKEN is not set. Add a GitHub PAT that can read littlegreenman70/iworks-tools-core, or make that repo public."
+            exit 1
+          fi
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.CORE_REPO_TOKEN }}"}}'
+        run: |
+          # Prefer VCS over the local path repo in CI (path does not exist on the runner).
+          composer config --unset repositories.0 || true
+          composer install --no-interaction --prefer-dist
+
+      - name: PHPCS
+        run: composer lint
+
+      - name: PHPStan
+        run: composer analyse
+
+      - name: Unit tests
+        run: composer test:unit
+
+  integration:
+    name: Integration (WP + MySQL)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: iworks_tests_hc
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require CORE_REPO_TOKEN
+        env:
+          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
+        run: |
+          if [ -z "$CORE_REPO_TOKEN" ]; then
+            echo "::error::Repository secret CORE_REPO_TOKEN is not set."
+            exit 1
+          fi
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Subversion
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
+      - name: Install dependencies
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.CORE_REPO_TOKEN }}"}}'
+        run: |
+          composer config --unset repositories.0 || true
+          composer install --no-interaction --prefer-dist
+
+      - name: Install WP test suite
+        run: bash bin/install-wp-tests.sh iworks_tests_hc root '' 127.0.0.1 latest
+
+      - name: Integration tests
+        env:
+          WP_TESTS_DIR: ${{ github.workspace }}/tests/wordpress/wordpress-tests-lib
+          IWIEHC_TESTSUITE: integration
+        run: composer test:integration
+
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require CORE_REPO_TOKEN
+        env:
+          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
+        run: |
+          if [ -z "$CORE_REPO_TOKEN" ]; then
+            echo "::error::Repository secret CORE_REPO_TOKEN is not set."
+            exit 1
+          fi
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer:v2
+
+      - name: Build plugin
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.CORE_REPO_TOKEN }}"}}'
+        run: |
+          composer config --unset repositories.0 || true
+          composer install --no-interaction --prefer-dist
+          # build.php requires Strauss (dev) already installed; do not strip --no-dev first
+          composer build
+
+      - name: Plugin Check
+        uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: './build/iworksie-health-check'
+          exclude-directories: 'vendor,vendor-prefixed/composer'

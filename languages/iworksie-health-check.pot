@@ -1,0 +1,716 @@
+# Copyright (C) 2026 iWorks.ie
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: iWorks.ie Health Check 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/iworksie-health-check\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-26T13:41:47+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: iworksie-health-check\n"
+
+#. Plugin Name of the plugin
+#: iworksie-health-check.php
+msgid "iWorks.ie Health Check"
+msgstr ""
+
+#. Plugin URI of the plugin
+#. Author URI of the plugin
+#: iworksie-health-check.php
+msgid "https://www.iworks.ie"
+msgstr ""
+
+#. Description of the plugin
+#: iworksie-health-check.php
+msgid "Read-only site health checks with plain-English fixes, disk and dead-weight finder, and a shareable report. Never changes your site."
+msgstr ""
+
+#. Author of the plugin
+#: iworksie-health-check.php
+msgid "iWorks.ie"
+msgstr ""
+
+#. translators: 1: required PHP version, 2: current PHP version
+#: iworksie-health-check.php:47
+#, php-format
+msgid "iWorks.ie Health Check requires PHP %1$s or higher. This site is running PHP %2$s."
+msgstr ""
+
+#. translators: 1: required WordPress version, 2: current WordPress version
+#: iworksie-health-check.php:60
+#, php-format
+msgid "iWorks.ie Health Check requires WordPress %1$s or higher. This site is running WordPress %2$s."
+msgstr ""
+
+#: iworksie-health-check.php:71
+msgid "iWorks.ie Health Check is missing its vendor-prefixed library. Run composer install, or install the release zip from wordpress.org."
+msgstr ""
+
+#: src/Admin/Ajax.php:107
+msgid "The site admin email address is not valid."
+msgstr ""
+
+#. translators: %s: site name
+#: src/Admin/Ajax.php:123
+#, php-format
+msgid "[%s] iWorks.ie Health Check test email"
+msgstr ""
+
+#: src/Admin/Ajax.php:126
+msgid ""
+"This is a test email from iWorks.ie Health Check.\n"
+"\n"
+"If you received this, WordPress was able to hand the message to the mail system. That does not always mean an inbox accepted it.\n"
+""
+msgstr ""
+
+#. translators: %s: email domain
+#: src/Admin/Ajax.php:141
+#, php-format
+msgid "WordPress reported the test email as sent to the admin address (%s). “Sent” means it was handed off to the mail system, not that it arrived. If you do not see it, check spam or configure SMTP."
+msgstr ""
+
+#: src/Admin/Ajax.php:148
+msgid "wp_mail() returned false without a detailed error."
+msgstr ""
+
+#. translators: %s: error detail
+#: src/Admin/Ajax.php:153
+#, php-format
+msgid "The test email failed or was blocked: %s. On local development sites a safety plugin often blocks mail on purpose. On live sites, SMTP is the usual fix."
+msgstr ""
+
+#: src/Admin/Screens.php:42
+msgid "Sorry, you are not allowed to access this page."
+msgstr ""
+
+#: src/Admin/Screens.php:46
+msgid "Overview"
+msgstr ""
+
+#: src/Admin/Screens.php:47
+msgid "Disk & dead weight"
+msgstr ""
+
+#: src/Admin/Screens.php:48
+msgid "Report"
+msgstr ""
+
+#: src/Admin/Screens.php:49
+msgid "Tools"
+msgstr ""
+
+#: src/Admin/Screens.php:56
+msgid "Read-only health checks with plain-English fixes. This plugin never changes your site."
+msgstr ""
+
+#: src/Admin/Screens.php:115
+msgid "Health check results"
+msgstr ""
+
+#: src/Admin/Screens.php:127
+msgid "Good"
+msgstr ""
+
+#: src/Admin/Screens.php:144
+msgid "Scan disk usage and look for dead weight such as old backups, caches, and development folders. This plugin never deletes anything."
+msgstr ""
+
+#: src/Admin/Screens.php:146
+msgid "Scan disk"
+msgstr ""
+
+#: src/Admin/Screens.php:165
+msgid "Total scanned:"
+msgstr ""
+
+#: src/Admin/Screens.php:174
+msgid "wp-content breakdown"
+msgstr ""
+
+#: src/Admin/Screens.php:177
+msgid "Area"
+msgstr ""
+
+#: src/Admin/Screens.php:178
+#: src/Admin/Screens.php:196
+#: src/Admin/Screens.php:223
+msgid "Size"
+msgstr ""
+
+#: src/Admin/Screens.php:192
+msgid "Top folders"
+msgstr ""
+
+#: src/Admin/Screens.php:195
+#: src/Admin/Screens.php:222
+msgid "Path"
+msgstr ""
+
+#: src/Admin/Screens.php:203
+msgid "Dead weight"
+msgstr ""
+
+#. translators: %s: size
+#: src/Admin/Screens.php:207
+#, php-format
+msgid "You could free about %s by removing these (after a backup and with your developer). This plugin never deletes files."
+msgstr ""
+
+#: src/Admin/Screens.php:211
+msgid "Warning: take a backup and check with your developer before deleting anything."
+msgstr ""
+
+#: src/Admin/Screens.php:224
+msgid "Why"
+msgstr ""
+
+#: src/Admin/Screens.php:231
+msgid "Critical: backup or SQL files were found under the web root. Anyone who guesses the file name can download them."
+msgstr ""
+
+#: src/Admin/Screens.php:246
+msgid "This report lists plugin names and versions. It does not include passwords, salts, API keys, or full email addresses (only the admin email domain)."
+msgstr ""
+
+#: src/Admin/Screens.php:260
+#: src/Admin/Screens.php:262
+msgid "Send test email"
+msgstr ""
+
+#: src/Admin/Screens.php:261
+msgid "Sends a test message to the site admin email via wp_mail(). “Sent” means WordPress handed the message to the mail system, not that it arrived in an inbox. If mail fails, an SMTP plugin is usually the fix (a future iWorks.ie SMTP plugin is planned)."
+msgstr ""
+
+#: src/Checks/Database/AutoloadSizeCheck.php:28
+msgid "Autoloaded options size"
+msgstr ""
+
+#: src/Checks/Database/AutoloadSizeCheck.php:41
+msgid "Autoloaded options are fetched on nearly every page load. When that bundle grows large, every visitor pays the cost."
+msgstr ""
+
+#: src/Checks/Database/AutoloadSizeCheck.php:42
+msgid "Ask a developer to review the largest autoloaded options and stop autoloading data that is only needed occasionally. Do not delete options unless you know what they do. This plugin never changes them."
+msgstr ""
+
+#. translators: %s: plugin slug
+#: src/Checks/Database/AutoloadSizeCheck.php:73
+#, php-format
+msgid "possibly %s"
+msgstr ""
+
+#: src/Checks/Database/AutoloadSizeCheck.php:76
+#: src/Checks/Server/ServerSoftwareCheck.php:37
+#: src/Checks/Server/ServerSoftwareCheck.php:58
+msgid "unknown"
+msgstr ""
+
+#. translators: %s: formatted size
+#: src/Checks/Database/AutoloadSizeCheck.php:83
+#, php-format
+msgid "Autoloaded options total about %s."
+msgstr ""
+
+#: src/Checks/Database/AutoloadSizeCheck.php:118
+#: src/Checks/Database/LeftoverTablesCheck.php:85
+#: src/Checks/Disk/DiskFreeCheck.php:91
+#: src/Checks/Server/HttpsCheck.php:76
+#: src/Checks/Server/MemoryLimitCheck.php:90
+#: src/Checks/Server/PhpExtensionsCheck.php:97
+#: src/Checks/WordPress/CronCheck.php:130
+#: src/Checks/WordPress/DebugDisplayCheck.php:77
+#: src/Checks/WordPress/FileEditorCheck.php:45
+#: src/Checks/WordPress/InactivePluginsThemesCheck.php:87
+#: src/Checks/WordPress/ObjectCacheCheck.php:45
+#: src/Checks/WordPress/RestApiCheck.php:79
+msgid "No action needed."
+msgstr ""
+
+#: src/Checks/Database/DatabaseSizeCheck.php:26
+msgid "Database size"
+msgstr ""
+
+#: src/Checks/Database/DatabaseSizeCheck.php:38
+msgid "A large database slows backups and clones. Knowing the heaviest tables helps you decide what to clean (revisions, logs, old data)."
+msgstr ""
+
+#: src/Checks/Database/DatabaseSizeCheck.php:39
+msgid "Review the largest tables with your developer. Safe clean-ups often include old post revisions and expired transients. Always take a backup first. This plugin never deletes data."
+msgstr ""
+
+#: src/Checks/Database/DatabaseSizeCheck.php:44
+msgid "Could not determine the database name."
+msgstr ""
+
+#. translators: %s: formatted size
+#: src/Checks/Database/DatabaseSizeCheck.php:87
+#, php-format
+msgid "Total database size is about %s. Top tables are listed in the report data."
+msgstr ""
+
+#: src/Checks/Database/LeftoverTablesCheck.php:25
+msgid "Possible leftover tables"
+msgstr ""
+
+#: src/Checks/Database/LeftoverTablesCheck.php:37
+msgid "Uninstalled plugins sometimes leave tables behind. They waste space and confuse audits. This check is a guess only."
+msgstr ""
+
+#: src/Checks/Database/LeftoverTablesCheck.php:38
+msgid "Compare the list with plugins you used to run. Only drop tables after a backup and with developer help. This plugin never deletes tables."
+msgstr ""
+
+#: src/Checks/Database/LeftoverTablesCheck.php:43
+msgid "Could not scan tables."
+msgstr ""
+
+#: src/Checks/Database/LeftoverTablesCheck.php:82
+msgid "No obvious leftover tables found by prefix heuristics."
+msgstr ""
+
+#. translators: %d: table count
+#: src/Checks/Database/LeftoverTablesCheck.php:94
+#, php-format
+msgid "%d table may not belong to core or an installed plugin."
+msgid_plural "%d tables may not belong to core or an installed plugin."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Checks/Database/RevisionsTransientsCheck.php:25
+msgid "Revisions and expired transients"
+msgstr ""
+
+#: src/Checks/Database/RevisionsTransientsCheck.php:47
+msgid "Revisions and expired transients are normal, but large piles waste database space and slow backups."
+msgstr ""
+
+#: src/Checks/Database/RevisionsTransientsCheck.php:48
+msgid "Use a trusted cleanup plugin or WP-CLI (wp transient delete --expired) after a backup. Limit revisions with WP_POST_REVISIONS in wp-config.php. This plugin never deletes data."
+msgstr ""
+
+#. translators: 1: revision count, 2: expired transient count
+#: src/Checks/Database/RevisionsTransientsCheck.php:51
+#, php-format
+msgid "%1$d post revisions and %2$d expired transients found."
+msgstr ""
+
+#: src/Checks/Disk/DeadWeightWebRootCheck.php:28
+msgid "Backup files in the web root"
+msgstr ""
+
+#: src/Checks/Disk/DeadWeightWebRootCheck.php:38
+msgid "Anyone who guesses the file name can download a database dump or full site archive if it sits inside the public web root."
+msgstr ""
+
+#: src/Checks/Disk/DeadWeightWebRootCheck.php:39
+msgid "Move backups outside the public folder (or off the server), then delete the public copy after you confirm the safe copy works. Take care: this plugin never deletes files."
+msgstr ""
+
+#. translators: %d: file count
+#: src/Checks/Disk/DeadWeightWebRootCheck.php:54
+#, php-format
+msgid "%d backup or SQL file was found under the web root."
+msgid_plural "%d backup or SQL files were found under the web root."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Checks/Disk/DeadWeightWebRootCheck.php:66
+msgid "No obvious backup or SQL dumps were found in a shallow scan of the web root. Run a full Disk scan for a deeper look."
+msgstr ""
+
+#: src/Checks/Disk/DeadWeightWebRootCheck.php:69
+msgid "No action needed unless a full disk scan finds more."
+msgstr ""
+
+#: src/Checks/Disk/DiskFreeCheck.php:27
+msgid "Free disk space"
+msgstr ""
+
+#: src/Checks/Disk/DiskFreeCheck.php:39
+msgid "When the disk fills up, WordPress cannot write uploads, caches, or updates, and the site can go down."
+msgstr ""
+
+#: src/Checks/Disk/DiskFreeCheck.php:40
+msgid "Ask your host for more disk space, remove unused backups and large media, and run the Disk & dead weight scan in this plugin to find heavy folders. Never delete files without a backup."
+msgstr ""
+
+#: src/Checks/Disk/DiskFreeCheck.php:45
+msgid "Could not read free disk space on this host."
+msgstr ""
+
+#. translators: %s: formatted free space
+#: src/Checks/Disk/DiskFreeCheck.php:59
+#, php-format
+msgid "About %s free on the disk that holds WordPress."
+msgstr ""
+
+#: src/Checks/Server/HttpsCheck.php:25
+msgid "HTTPS"
+msgstr ""
+
+#: src/Checks/Server/HttpsCheck.php:41
+msgid "HTTPS encrypts traffic between visitors and your site. Without it, browsers warn users and some features (payments, logins) are unsafe."
+msgstr ""
+
+#: src/Checks/Server/HttpsCheck.php:42
+msgid "Install an SSL certificate with your host, then set WordPress Address and Site Address to https:// in Settings → General. Force HTTPS in your host panel if available."
+msgstr ""
+
+#: src/Checks/Server/HttpsCheck.php:52
+msgid "The site or home URL is not using https://."
+msgstr ""
+
+#: src/Checks/Server/HttpsCheck.php:63
+msgid "Site URLs use HTTPS, but this admin request is not over SSL (common on some local setups)."
+msgstr ""
+
+#: src/Checks/Server/HttpsCheck.php:73
+msgid "Admin and site URLs are using HTTPS."
+msgstr ""
+
+#: src/Checks/Server/MemoryLimitCheck.php:27
+msgid "Memory limit"
+msgstr ""
+
+#: src/Checks/Server/MemoryLimitCheck.php:48
+msgid "Low memory causes white screens, failed imports, and broken page builders. WordPress and plugins share this budget."
+msgstr ""
+
+#: src/Checks/Server/MemoryLimitCheck.php:49
+msgid "Raise memory_limit in php.ini or ask your host. You can also define WP_MEMORY_LIMIT and WP_MAX_MEMORY_LIMIT in wp-config.php (for example 256M)."
+msgstr ""
+
+#. translators: 1: PHP memory_limit, 2: WP_MEMORY_LIMIT, 3: WP_MAX_MEMORY_LIMIT
+#: src/Checks/Server/MemoryLimitCheck.php:52
+#, php-format
+msgid "PHP memory_limit is %1$s. WP_MEMORY_LIMIT is %2$s. WP_MAX_MEMORY_LIMIT is %3$s."
+msgstr ""
+
+#: src/Checks/Server/MemoryLimitCheck.php:54
+#: src/Checks/Server/MemoryLimitCheck.php:55
+msgid "not set"
+msgstr ""
+
+#: src/Checks/Server/PhpExtensionsCheck.php:25
+msgid "PHP extensions"
+msgstr ""
+
+#: src/Checks/Server/PhpExtensionsCheck.php:55
+msgid "Extensions unlock features WordPress and plugins expect: HTTPS requests, zip installs, image processing, and international text."
+msgstr ""
+
+#: src/Checks/Server/PhpExtensionsCheck.php:56
+msgid "Ask your host to enable the missing PHP extensions listed here, then reload this page."
+msgstr ""
+
+#. translators: %s: comma-separated extension list
+#: src/Checks/Server/PhpExtensionsCheck.php:67
+#, php-format
+msgid "Required extensions missing: %s."
+msgstr ""
+
+#. translators: %s: comma-separated extension list
+#: src/Checks/Server/PhpExtensionsCheck.php:82
+#, php-format
+msgid "Recommended extensions missing: %s."
+msgstr ""
+
+#: src/Checks/Server/PhpExtensionsCheck.php:94
+msgid "All required and recommended PHP extensions are loaded."
+msgstr ""
+
+#: src/Checks/Server/PhpLimitsCheck.php:26
+msgid "PHP execution and upload limits"
+msgstr ""
+
+#. translators: 1: max_execution_time, 2: upload_max_filesize, 3: post_max_size
+#: src/Checks/Server/PhpLimitsCheck.php:44
+#, php-format
+msgid "max_execution_time is %1$s seconds. upload_max_filesize is %2$s. post_max_size is %3$s."
+msgstr ""
+
+#: src/Checks/Server/PhpLimitsCheck.php:49
+msgid "These limits control how long a request can run and how large a file you can upload. Migrations, backups, and media imports often need more headroom than the defaults."
+msgstr ""
+
+#: src/Checks/Server/PhpLimitsCheck.php:50
+msgid "Ask your host to raise max_execution_time (for example 120), upload_max_filesize, and post_max_size (post_max_size should be at least as large as upload_max_filesize)."
+msgstr ""
+
+#: src/Checks/Server/PhpLimitsCheck.php:85
+msgid "No action needed for typical site work."
+msgstr ""
+
+#: src/Checks/Server/PhpVersionCheck.php:26
+msgid "PHP version"
+msgstr ""
+
+#: src/Checks/Server/PhpVersionCheck.php:39
+msgid "PHP is the language WordPress runs on. Unsupported versions stop receiving security fixes."
+msgstr ""
+
+#: src/Checks/Server/PhpVersionCheck.php:40
+msgid "Ask your host to move this site to a currently supported PHP version (8.2 or newer is a good target). Take a backup first."
+msgstr ""
+
+#. translators: %s: PHP version
+#: src/Checks/Server/PhpVersionCheck.php:47
+#, php-format
+msgid "PHP %s is below the supported range or past end of life."
+msgstr ""
+
+#. translators: %s: PHP version
+#: src/Checks/Server/PhpVersionCheck.php:65
+#, php-format
+msgid "PHP %s is in security-only support. Plan an upgrade."
+msgstr ""
+
+#. translators: %s: PHP version
+#: src/Checks/Server/PhpVersionCheck.php:82
+#, php-format
+msgid "PHP %s is actively supported."
+msgstr ""
+
+#: src/Checks/Server/PhpVersionCheck.php:87
+msgid "No action needed right now. Keep an eye on PHP release calendars once a year."
+msgstr ""
+
+#: src/Checks/Server/ServerSoftwareCheck.php:26
+msgid "Server software"
+msgstr ""
+
+#. translators: 1: web server software, 2: database label, 3: database version
+#: src/Checks/Server/ServerSoftwareCheck.php:55
+#, php-format
+msgid "Web server: %1$s. Database: %2$s %3$s."
+msgstr ""
+
+#: src/Checks/Server/ServerSoftwareCheck.php:60
+msgid "Older database servers miss performance and security fixes WordPress relies on."
+msgstr ""
+
+#. translators: 1: database label, 2: minimum version
+#: src/Checks/Server/ServerSoftwareCheck.php:63
+#, php-format
+msgid "Ask your host to upgrade %1$s to %2$s or newer."
+msgstr ""
+
+#: src/Checks/Server/ServerSoftwareCheck.php:89
+msgid "No action needed unless your host offers a newer supported version."
+msgstr ""
+
+#: src/Checks/WordPress/CronCheck.php:26
+msgid "Scheduled events (WP-Cron)"
+msgstr ""
+
+#: src/Checks/WordPress/CronCheck.php:64
+msgid "Scheduled events send emails, clear caches, publish scheduled posts, and run backups. When cron stalls, those jobs pile up."
+msgstr ""
+
+#: src/Checks/WordPress/CronCheck.php:65
+msgid "If DISABLE_WP_CRON is true, make sure a real server cron hits wp-cron.php every few minutes. Otherwise visit the site occasionally or ask your host to enable a system cron. Plugins such as WP Crontrol can show stuck events."
+msgstr ""
+
+#. translators: %d: scheduled event count
+#: src/Checks/WordPress/CronCheck.php:76
+#, php-format
+msgid "%d scheduled events."
+msgstr ""
+
+#: src/Checks/WordPress/CronCheck.php:80
+msgid "DISABLE_WP_CRON is set (a real server cron is expected)."
+msgstr ""
+
+#. translators: 1: overdue count, 2: human time
+#: src/Checks/WordPress/CronCheck.php:85
+#, php-format
+msgid "%1$d overdue (latest is %2$s late)."
+msgstr ""
+
+#: src/Checks/WordPress/DebugDisplayCheck.php:25
+msgid "Debug display"
+msgstr ""
+
+#: src/Checks/WordPress/DebugDisplayCheck.php:38
+msgid "Showing PHP errors on a live site can leak paths, plugin names, and other details useful to attackers, and it looks broken to visitors."
+msgstr ""
+
+#: src/Checks/WordPress/DebugDisplayCheck.php:39
+msgid "In wp-config.php set WP_DEBUG_DISPLAY to false on production. You can keep WP_DEBUG_LOG true to write errors to a private log file instead."
+msgstr ""
+
+#: src/Checks/WordPress/DebugDisplayCheck.php:49
+msgid "Error display is enabled on a production environment."
+msgstr ""
+
+#: src/Checks/WordPress/DebugDisplayCheck.php:60
+msgid "WP_DEBUG is on in production. Prefer logging instead of displaying errors."
+msgstr ""
+
+#. translators: %s: environment type
+#: src/Checks/WordPress/DebugDisplayCheck.php:72
+#, php-format
+msgid "Debug display looks fine for the %s environment."
+msgstr ""
+
+#: src/Checks/WordPress/FileEditorCheck.php:25
+msgid "Plugin and theme file editor"
+msgstr ""
+
+#: src/Checks/WordPress/FileEditorCheck.php:36
+msgid "The built-in file editor lets anyone with admin access change plugin and theme code from the browser. If an admin account is compromised, that becomes an easy way to plant malware."
+msgstr ""
+
+#: src/Checks/WordPress/FileEditorCheck.php:37
+msgid "Add define( 'DISALLOW_FILE_EDIT', true ); to wp-config.php. Edit code via SFTP, Git, or your host's file manager instead."
+msgstr ""
+
+#: src/Checks/WordPress/FileEditorCheck.php:42
+msgid "DISALLOW_FILE_EDIT is enabled. The plugin/theme editor is blocked."
+msgstr ""
+
+#: src/Checks/WordPress/FileEditorCheck.php:52
+msgid "The plugin and theme file editor is still enabled."
+msgstr ""
+
+#: src/Checks/WordPress/InactivePluginsThemesCheck.php:25
+msgid "Inactive plugins and themes"
+msgstr ""
+
+#: src/Checks/WordPress/InactivePluginsThemesCheck.php:58
+msgid "Inactive plugins and themes still sit on disk. Attackers can target known bugs in unused code, and they clutter updates."
+msgstr ""
+
+#: src/Checks/WordPress/InactivePluginsThemesCheck.php:59
+msgid "Delete plugins and themes you do not need (after a backup). Keep one default theme as a fallback."
+msgstr ""
+
+#. translators: 1: inactive plugin count, 2: inactive theme count
+#: src/Checks/WordPress/InactivePluginsThemesCheck.php:71
+#, php-format
+msgid "%1$d inactive plugin(s) and %2$d inactive theme(s) found."
+msgstr ""
+
+#: src/Checks/WordPress/InactivePluginsThemesCheck.php:84
+msgid "No inactive plugins or themes found."
+msgstr ""
+
+#: src/Checks/WordPress/ObjectCacheCheck.php:25
+msgid "Persistent object cache"
+msgstr ""
+
+#: src/Checks/WordPress/ObjectCacheCheck.php:36
+msgid "A persistent object cache (Redis, Memcached) reduces database load on busier sites."
+msgstr ""
+
+#: src/Checks/WordPress/ObjectCacheCheck.php:37
+msgid "Ask your host whether Redis or Memcached is available, then install a compatible object-cache.php drop-in. Small brochure sites often do not need this."
+msgstr ""
+
+#: src/Checks/WordPress/ObjectCacheCheck.php:42
+msgid "A persistent object cache is in use."
+msgstr ""
+
+#: src/Checks/WordPress/ObjectCacheCheck.php:52
+msgid "No persistent object cache detected. Fine for small sites; recommended for larger or high-traffic ones."
+msgstr ""
+
+#: src/Checks/WordPress/RestApiCheck.php:25
+msgid "REST API"
+msgstr ""
+
+#: src/Checks/WordPress/RestApiCheck.php:35
+msgid "The REST API powers the block editor, many plugins, and mobile apps. If it fails, editing and integrations break."
+msgstr ""
+
+#: src/Checks/WordPress/RestApiCheck.php:36
+msgid "Disable security plugins briefly to test, check that pretty permalinks work, and look for PHP fatals in the debug log. Ask your host if a firewall is blocking /wp-json/."
+msgstr ""
+
+#: src/Checks/WordPress/RestApiCheck.php:44
+msgid "REST request failed."
+msgstr ""
+
+#. translators: 1: HTTP status, 2: message
+#: src/Checks/WordPress/RestApiCheck.php:63
+#, php-format
+msgid "REST request failed with status %1$s: %2$s"
+msgstr ""
+
+#: src/Checks/WordPress/RestApiCheck.php:76
+msgid "REST API responded successfully to an internal /wp/v2/types request."
+msgstr ""
+
+#: src/Checks/WordPress/UpdatesCheck.php:25
+msgid "Updates pending"
+msgstr ""
+
+#: src/Checks/WordPress/UpdatesCheck.php:67
+msgid "Updates often include security fixes. Delaying them leaves known holes open."
+msgstr ""
+
+#: src/Checks/WordPress/UpdatesCheck.php:68
+msgid "Go to Dashboard → Updates, take a backup, then apply updates one group at a time and spot-check the site."
+msgstr ""
+
+#: src/Checks/WordPress/UpdatesCheck.php:78
+msgid "WordPress core is a major version behind. Update as soon as you can."
+msgstr ""
+
+#. translators: %d: number of pending updates
+#: src/Checks/WordPress/UpdatesCheck.php:91
+#, php-format
+msgid "%d update is pending."
+msgid_plural "%d updates are pending."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Checks/WordPress/UpdatesCheck.php:103
+msgid "No pending updates in the cached WordPress update data."
+msgstr ""
+
+#: src/Checks/WordPress/UpdatesCheck.php:106
+msgid "Visit Dashboard → Updates occasionally so WordPress can refresh its update list."
+msgstr ""
+
+#: src/Plugin.php:85
+#: src/Plugin.php:104
+#: src/Plugin.php:105
+msgid "Health Check"
+msgstr ""
+
+#: src/Plugin.php:90
+msgid "Read-only health check: server, WordPress, database, disk space and dead weight, with plain-English fixes."
+msgstr ""
+
+#: src/Plugin.php:92
+msgid "Read-only. Never changes your site."
+msgstr ""
+
+#: src/Plugin.php:147
+msgid "Sending…"
+msgstr ""
+
+#: src/Plugin.php:148
+msgid "Saving disk summary…"
+msgstr ""
+
+#: src/Support/Bytes.php:56
+msgid "unlimited"
+msgstr ""
+
+#: src/Support/ResultsCache.php:59
+msgid "Not checked yet."
+msgstr ""
+
+#. translators: %s: human time difference
+#: src/Support/ResultsCache.php:63
+#, php-format
+msgid "Last checked %s ago"
+msgstr ""
