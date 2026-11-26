@@ -7,6 +7,8 @@
 
 namespace IWorksIE\HealthCheck\Support;
 
+use IWorksIE\HealthCheck\Checks\Disk\DeadWeightWebRootCheck;
+
 /**
  * Disk scan post-processing. Never deletes.
  *
@@ -239,7 +241,6 @@ final class DiskSummary {
 		$abs  = defined( 'ABSPATH' ) ? wp_normalize_path( ABSPATH ) : '';
 		$out  = array();
 		$seen = array();
-		$exts = array( 'sql', 'zip', 'tar', 'gz', 'tgz', 'rar', '7z' );
 		$pool = array_merge( $dead, $top );
 		foreach ( $pool as $item ) {
 			if ( ! is_array( $item ) ) {
@@ -249,9 +250,12 @@ final class DiskSummary {
 			if ( '' === $path || '' === $abs || 0 !== strpos( $path, $abs ) ) {
 				continue;
 			}
+			if ( DeadWeightWebRootCheck::is_ignored_path( $path ) ) {
+				continue;
+			}
 			$base    = basename( $path );
-			$ext     = strtolower( pathinfo( $base, PATHINFO_EXTENSION ) );
 			$is_dir  = ! empty( $item['is_dir'] );
+			$bytes   = isset( $item['bytes'] ) ? (int) $item['bytes'] : 0;
 			$dead_id = '';
 			if ( isset( $item['dead']['id'] ) ) {
 				$dead_id = (string) $item['dead']['id'];
@@ -259,16 +263,22 @@ final class DiskSummary {
 				$dead_id = (string) $item['id'];
 			}
 			$backup_dead = ( 0 === strpos( $dead_id, 'backup' ) );
-			$risky       = $backup_dead
-				|| false !== stripos( $base, 'backup' )
-				|| ( ! $is_dir && ( in_array( $ext, $exts, true ) || in_array( $dead_id, array( 'archive', 'sql_large' ), true ) ) );
+			$backup_name = false !== stripos( $base, 'backup' );
+			$critical    = ! $is_dir && (
+				DeadWeightWebRootCheck::is_critical_filename( $base )
+				|| in_array( $dead_id, array( 'archive', 'sql_large' ), true )
+			);
+			$risky       = $backup_dead || $backup_name || $critical;
 			if ( ! $risky || isset( $seen[ $path ] ) ) {
+				continue;
+			}
+			if ( $is_dir && $bytes <= 0 ) {
 				continue;
 			}
 			$seen[ $path ] = true;
 			$out[]         = array(
 				'path'   => $path,
-				'bytes'  => isset( $item['bytes'] ) ? (int) $item['bytes'] : 0,
+				'bytes'  => $bytes,
 				'is_dir' => $is_dir,
 			);
 		}
