@@ -90,10 +90,17 @@ final class DiskSummary {
 	 * @return string
 	 */
 	public static function relative_path( $path ) {
-		$abs  = defined( 'ABSPATH' ) ? wp_normalize_path( ABSPATH ) : '';
-		$path = wp_normalize_path( (string) $path );
-		if ( '' !== $abs && 0 === strpos( $path, $abs ) ) {
-			return ltrim( substr( $path, strlen( $abs ) ), '/' );
+		$abs  = defined( 'ABSPATH' ) ? rtrim( wp_normalize_path( ABSPATH ), '/' ) : '';
+		$path = rtrim( wp_normalize_path( (string) $path ), '/' );
+		if ( '' === $abs ) {
+			return $path;
+		}
+		if ( $path === $abs ) {
+			return '.';
+		}
+		$prefix = $abs . '/';
+		if ( 0 === strpos( $path, $prefix ) ) {
+			return substr( $path, strlen( $prefix ) );
 		}
 		return $path;
 	}
